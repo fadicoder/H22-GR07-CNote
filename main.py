@@ -1,17 +1,15 @@
-# This is a sample Python script.
+from tkinter import *
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hiiiiiiii, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
 
-print('BdeB is the best school in the world!')
+    window = Tk()
+    window.title("C-Note")
+    window.configure(padx=10, pady=10)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    keys_area = Text(window)
+    keys_area.grid(row=0, column=0)
+
+    notes_text = Text(window)
+    notes_text.grid(row=0, column=1)
+
+    window.mainloop()
