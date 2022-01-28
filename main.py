@@ -2,14 +2,14 @@ from tkinter import *
 
 if __name__ == '__main__':
 
-    window = Tk()
-    window.title("C-Note")
-    window.configure(padx=10, pady=10)
+    root = Tk()
+    root.title("C-Note")
+    root.configure(padx=10, pady=10, bg='#000150')
 
-    keys_area = Text(window)
-    keys_area.grid(row=0, column=0)
+    Label(root, text="C-Note", font="None 30", bg='#000150', fg='white').grid(row=0, columnspan=2)
+    keys_area = Text(root, width=25, font="None 12")
+    keys_area.grid(row=2, column=0, padx=10)
+    notes_text = Text(root, font="None 12")
+    notes_text.grid(row=2, column=1, padx=10)
 
-    notes_text = Text(window)
-    notes_text.grid(row=0, column=1)
-
-    window.mainloop()
+    root.mainloop()
