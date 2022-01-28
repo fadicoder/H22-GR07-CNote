@@ -7,8 +7,8 @@ if __name__ != '__main__':
 
 window = Tk()
 window.title("C-Note")
-window.configure(padx=10, pady=10, bg='#000150')
-
+window.configure(padx=20, pady=20, bg='#000150')
+window.anchor(anchor=CENTER)
 
 def launchNoteWindow():
     Label(window, text="C-Note", font="None 30", bg='#000150', fg='white').grid(row=0, columnspan=2, pady=10)
