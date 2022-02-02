@@ -1,6 +1,14 @@
-import sys
-from tkinter import *
+from gui import Window
 
+
+if __name__ == '__main__':
+
+    window = Window()
+    window.launch()
+
+
+
+'''
 if __name__ != '__main__':
     sys.exit()
 
@@ -8,9 +16,8 @@ if __name__ != '__main__':
 window = Tk()
 window.title("C-Note")
 window.configure(padx=20, pady=20, bg='#000150')
-window.anchor(anchor=CENTER)
+window.anchor(anchor=N)
 window.state('zoomed')
-
 
 def launchNoteWindow():
 
@@ -29,14 +36,15 @@ def launchNoteWindow():
 
     Button(window, text="Submit", font="None 12", bg='white', fg='black').grid(row=4, column=0, pady=10)
 
-    window.mainloop()
+
 
 
 def launchSignInWindow():
 
     Label(window, text="C-Note", font="None 30", bg='#000150', fg='white').grid(row=0, columnspan=2)
-    window.mainloop()
 
 
 if __name__ == '__main__':
     launchNoteWindow()
+    '''
+
