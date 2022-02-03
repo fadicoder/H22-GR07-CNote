@@ -19,6 +19,10 @@ class Window(QMainWindow):
         self.keywords_text = QPlainTextEdit()
         self.headLines_text = QPlainTextEdit()
 
+        self.menubar = self.__menubar()
+        self.menubar.setVisible(False)
+        self.setMenuBar(self.menubar)
+
         self.widgets_lst = QStackedWidget()
         self.setCentralWidget(self.widgets_lst)
         self.setWindowTitle("C-Note")
@@ -28,6 +32,20 @@ class Window(QMainWindow):
         self.widgets_lst.addWidget(self.notes_widget)
         self.widgets_lst.addWidget(self.welcome_widget)
         self.widgets_lst.setCurrentWidget(self.welcome_widget)
+
+    def __menubar(self):
+
+        save_act = QAction('Save', self)
+        save_act.setShortcut('Ctrl+S')
+        save_act.setStatusTip('Saving...')
+        save_act.triggered.connect(self.save)
+
+        menubar = QMenuBar()
+        file_menu = menubar.addMenu('File')
+        file_menu.addActions([save_act])
+
+        return menubar
+
 
     def __welcome_widget(self):
 
@@ -60,6 +78,7 @@ class Window(QMainWindow):
 
         root.setAlignment(Qt.AlignCenter)
 
+        self.grabKeyboard = self.enter_login
         return welcome_widget
 
     def __notes_widget(self):
@@ -106,5 +125,18 @@ class Window(QMainWindow):
 
     def login(self):
         """ verifie if password matches username :"""
+        self.menubar.setVisible(True)
         self.widgets_lst.setCurrentWidget(self.notes_widget)
+
+    def show_welcom_page(self):
+        self.menubar.setVisible(False)
+        self.widgets_lst.setCurrentWidget(self.welcome_widget)
+
+    def enter_login(self, event):
+        super().keyPressEvent(event)
+        if event.key() == Qt.Key_Enter:
+            self.login()
+
+    def save(self):
+        print("Save!")
 
