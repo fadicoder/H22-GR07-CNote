@@ -1,3 +1,5 @@
+import time
+
 from gui import Window
 
 
