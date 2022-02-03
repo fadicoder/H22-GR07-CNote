@@ -4,24 +4,17 @@ from PyQt5.QtGui import *
 import sys
 
 
-
-app = QApplication(sys.argv)
-
-
 class Window(QMainWindow):
 
     def __init__(self):
 
+        self.app = QApplication(sys.argv)
         super().__init__()
 
         self.summery_text = QPlainTextEdit()
         self.notes_text = QPlainTextEdit()
         self.keywords_text = QPlainTextEdit()
         self.headLines_text = QPlainTextEdit()
-
-        self.menubar = self.__menubar()
-        self.menubar.setVisible(False)
-        self.setMenuBar(self.menubar)
 
         self.widgets_lst = QStackedWidget()
         self.setCentralWidget(self.widgets_lst)
@@ -33,19 +26,32 @@ class Window(QMainWindow):
         self.widgets_lst.addWidget(self.welcome_widget)
         self.widgets_lst.setCurrentWidget(self.welcome_widget)
 
-    def __menubar(self):
+        self.menubar = QMenuBar()
+        self.__init_menubar()
+        self.menubar.setVisible(False)
+        self.setMenuBar(self.menubar)
+
+    def __init_menubar(self):
 
         save_act = QAction('Save', self)
         save_act.setShortcut('Ctrl+S')
         save_act.setStatusTip('Saving...')
         save_act.triggered.connect(self.save)
 
-        menubar = QMenuBar()
-        file_menu = menubar.addMenu('File')
-        file_menu.addActions([save_act])
+        signout_act = QAction('Sign out', self)
+        signout_act.triggered.connect(self.show_welcome_page)
 
-        return menubar
+        exit_act = QAction('exit', self)
+        exit_act.setShortcut('Ctrl+Q')
+        exit_act.triggered.connect(self.app.exit)
 
+        file_menu = self.menubar.addMenu('File')
+        file_menu.addAction(exit_act)
+
+        account_menu = self.menubar.addMenu('Account')
+        account_menu.addAction(save_act)
+        account_menu.addSeparator()
+        account_menu.addAction(signout_act)
 
     def __welcome_widget(self):
 
@@ -78,7 +84,7 @@ class Window(QMainWindow):
 
         root.setAlignment(Qt.AlignCenter)
 
-        self.grabKeyboard = self.enter_login
+
         return welcome_widget
 
     def __notes_widget(self):
@@ -119,16 +125,13 @@ class Window(QMainWindow):
 
         return notes_widget
 
-    def launch(self):
-        self.showMaximized()
-        sys.exit(app.exec())
-
     def login(self):
         """ verifie if password matches username :"""
         self.menubar.setVisible(True)
         self.widgets_lst.setCurrentWidget(self.notes_widget)
 
-    def show_welcom_page(self):
+    def show_welcome_page(self):
+        print('somthing')
         self.menubar.setVisible(False)
         self.widgets_lst.setCurrentWidget(self.welcome_widget)
 
@@ -139,4 +142,8 @@ class Window(QMainWindow):
 
     def save(self):
         print("Save!")
+
+    def launch(self):
+        self.showMaximized()
+        sys.exit(self.app.exec())
 
