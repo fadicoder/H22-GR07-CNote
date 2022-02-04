@@ -7,7 +7,3 @@ def __get_keywords(phrase,text):
     return keywords
 
 def get_keywords
-
-
-phrases.
-troisieme
