@@ -1,9 +1,10 @@
-def __get_keywords(phrase,text):
-    keywords = []
-    phrases= text.split(".")
-    words=[]
-    for phrase in phrases
-        words=
-    return keywords
+def keywords_matrix(text):
 
-def get_keywords
+    phrases = text.split(".")
+    words = []
+
+    for phrase in phrases:
+        words.append(phrase.split(' '))
+
+    print(words)
+    return words

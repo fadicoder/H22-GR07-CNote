@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import *
 import sys
+import wordextractor
 
 
 class Window(QMainWindow):
@@ -109,20 +110,34 @@ class Window(QMainWindow):
         self.headLines_text.setPlaceholderText('Write your headlines here...')
         self.keywords_text.setMaximumWidth(400)
         self.keywords_text.setFont(QFont('None', 12))
-        self.keywords_text.setPlaceholderText('Write yout keywords here...')
+        self.keywords_text.setEnabled(False)
+        self.keywords_text.setPlaceholderText('Click on submit to generate your keywords')
         self.notes_text.setFont(QFont('None', 12))
         self.notes_text.setPlaceholderText('Write your notes here...')
         self.summery_text.setMaximumHeight(100)
         self.summery_text.setFont(QFont('None', 12))
         self.summery_text.setPlaceholderText('Write your summery here...')
-        self.toTransmitText = 'fgfg3'
-        self.toTransmitText= self.notes_text.toPlainText()
+        keyword_line = QLineEdit()
+        add_btn = QPushButton('Add keyword')
+        submit_btn = QPushButton('Submit')
+        submit_btn.setMaximumWidth(50)
+        submit_btn.
+
+        submit_btn.clicked.connect(lambda: wordextractor.keywords_matrix(self.notes_text.toPlainText()))
 
         texts_layout.addWidget(self.headLines_text)
-        middle_text_layout.addWidget(self.keywords_text)
+        keywords_layout = QVBoxLayout()
+        keywords_layout.addWidget(self.keywords_text)
+        add_key_layout = QHBoxLayout()
+        add_key_layout.addWidget(keyword_line)
+        add_key_layout.addWidget(add_btn)
+        keywords_layout.addLayout(add_key_layout)
+        middle_text_layout.addLayout(keywords_layout)
         middle_text_layout.addWidget(self.notes_text)
         texts_layout.addLayout(middle_text_layout)
         texts_layout.addWidget(self.summery_text)
+        texts_layout.addWidget(submit_btn)
+
         root.addLayout(texts_layout)
 
         return notes_widget
