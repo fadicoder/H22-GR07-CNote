@@ -115,6 +115,8 @@ class Window(QMainWindow):
         self.summery_text.setMaximumHeight(100)
         self.summery_text.setFont(QFont('None', 12))
         self.summery_text.setPlaceholderText('Write your summery here...')
+        self.toTransmitText = 'fgfg3'
+        self.toTransmitText= self.notes_text.toPlainText()
 
         texts_layout.addWidget(self.headLines_text)
         middle_text_layout.addWidget(self.keywords_text)
@@ -126,12 +128,10 @@ class Window(QMainWindow):
         return notes_widget
 
     def login(self):
-        """ verifie if password matches username :"""
         self.menubar.setVisible(True)
         self.widgets_lst.setCurrentWidget(self.notes_widget)
 
     def show_welcome_page(self):
-        print('somthing')
         self.menubar.setVisible(False)
         self.widgets_lst.setCurrentWidget(self.welcome_widget)
 

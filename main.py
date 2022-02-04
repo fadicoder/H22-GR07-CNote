@@ -6,6 +6,7 @@ if __name__ == '__main__':
     window = Window()
     window.launch()
 
+
 '''
 if __name__ != '__main__':
     sys.exit()
