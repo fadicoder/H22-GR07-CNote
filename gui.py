@@ -8,7 +8,6 @@ import wordextractor
 class Window(QMainWindow):
 
     def __init__(self):
-
         self.app = QApplication(sys.argv)
         super().__init__()
 
@@ -33,7 +32,6 @@ class Window(QMainWindow):
         self.setMenuBar(self.menubar)
 
     def __init_menubar(self):
-
         save_act = QAction('Save', self)
         save_act.setShortcut('Ctrl+S')
         save_act.setStatusTip('Saving...')
@@ -55,7 +53,6 @@ class Window(QMainWindow):
         account_menu.addAction(signout_act)
 
     def __welcome_widget(self):
-
         welcome_widget = QWidget()
         root = QVBoxLayout()
         welcome_widget.setLayout(root)
@@ -85,11 +82,9 @@ class Window(QMainWindow):
 
         root.setAlignment(Qt.AlignCenter)
 
-
         return welcome_widget
 
     def __notes_widget(self):
-
         notes_widget = QTabWidget()
         root = QVBoxLayout()
         notes_widget.setLayout(root)
@@ -117,19 +112,19 @@ class Window(QMainWindow):
         self.summery_text.setMaximumHeight(100)
         self.summery_text.setFont(QFont('None', 12))
         self.summery_text.setPlaceholderText('Write your summery here...')
-        keyword_line = QLineEdit()
+        self.keyword_line = QLineEdit()
         add_btn = QPushButton('Add keyword')
         submit_btn = QPushButton('Submit')
         submit_btn.setMaximumWidth(50)
-        submit_btn.
 
         submit_btn.clicked.connect(lambda: wordextractor.keywords_matrix(self.notes_text.toPlainText()))
+        add_btn.clicked.connect(lambda: self.add_keyword(self.keyword_line.text()))
 
         texts_layout.addWidget(self.headLines_text)
         keywords_layout = QVBoxLayout()
         keywords_layout.addWidget(self.keywords_text)
         add_key_layout = QHBoxLayout()
-        add_key_layout.addWidget(keyword_line)
+        add_key_layout.addWidget(self.keyword_line)
         add_key_layout.addWidget(add_btn)
         keywords_layout.addLayout(add_key_layout)
         middle_text_layout.addLayout(keywords_layout)
@@ -158,7 +153,18 @@ class Window(QMainWindow):
     def save(self):
         print("Save!")
 
+    def add_keyword(self, keys):
+        new_text = ''
+        if type(keys) == str:
+            new_text = keys
+            self.keyword_line.clear()
+
+        elif type(keys) == list:
+            new_text = '\n'.join(keys)
+
+        text = self.keywords_text.toPlainText() + new_text + '\n'
+        self.keywords_text.setPlainText(text)
+
     def launch(self):
         self.showMaximized()
         sys.exit(self.app.exec())
-
