@@ -1,6 +1,4 @@
-from bisect import bisect
 from sortedcontainers import sorteddict
-from collections import OrderedDict
 import threading
 
 DICT_PATH = r'dictionary.txt'
@@ -21,7 +19,6 @@ dict_thread.start()
 class Idea:
 
     def __init__(self, phrase: str, keywords=None):
-        super().__init__()
         if keywords is None:
             keywords = list()
         self.keywords = keywords
@@ -33,11 +30,14 @@ class Idea:
     def __len__(self):
         return len(self.keywords)
 
+    def is_empty(self):
+        return len(self.keywords) == 0
+
     def add_keyword(self, new_keyword):
         self.keywords.append(new_keyword)
 
 
-def __keywords_matrix(text):
+def words_matrix(text):
     phrases = text.split(".")
     words = []
 
@@ -47,27 +47,26 @@ def __keywords_matrix(text):
     return words
 
 
-def __is_key(word):
+def is_key(word):
     word = word.lower()
     if word == '' or word == ' ':
         return False
 
-    pos = USAGE_DICT.bisect(word)
+    dict_thread.join()  # at this point, the dictionary should be completed.
 
-    in_dict = True if pos != len(USAGE_DICT) and USAGE_DICT.get(pos) == word else False
-    print(word, in_dict)
+    pos = USAGE_DICT.bisect(word) - 1
+
+    in_dict = True if pos != len(USAGE_DICT) and USAGE_DICT.keys()[pos] == word else False
 
     if in_dict:
         if USAGE_DICT[word] < 40:
             return True
-    else:
-        return False
 
-    return True
+    return False
 
 
 def get_ideas(text):
-    words = __keywords_matrix(text)
+    words = words_matrix(text)
     ideas = []
 
     for phrase in words:
@@ -75,9 +74,10 @@ def get_ideas(text):
 
         for word in phrase:
 
-            if __is_key(word):
+            if is_key(word):
                 idea.add_keyword(word)
 
-        ideas.append(idea)
+        if not idea.is_empty():
+            ideas.append(idea)
 
     return ideas

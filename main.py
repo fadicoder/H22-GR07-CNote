@@ -46,4 +46,3 @@ def launchSignInWindow():
 if __name__ == '__main__':
     launchNoteWindow()
     '''
-
