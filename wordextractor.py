@@ -1,14 +1,17 @@
+from bisect import bisect
+from sortedcontainers import sorteddict
+from collections import OrderedDict
 import threading
 
 DICT_PATH = r'dictionary.txt'
-USAGE_DICT = dict()
+USAGE_DICT = sorteddict.SortedDict()
 
 
 def open_dict():
     with open(DICT_PATH, 'r') as dict_file:
         for line in dict_file.readlines():
             word_info = line.split(' ')
-            USAGE_DICT[word_info[0]] = word_info[1]
+            USAGE_DICT[word_info[0]] = int(word_info[1])
 
 
 dict_thread = threading.Thread(target=open_dict)
@@ -44,8 +47,20 @@ def __keywords_matrix(text):
     return words
 
 
-def __is_key(dict_file, word):
+def __is_key(word):
+    word = word.lower()
     if word == '' or word == ' ':
+        return False
+
+    pos = USAGE_DICT.bisect(word)
+
+    in_dict = True if pos != len(USAGE_DICT) and USAGE_DICT.get(pos) == word else False
+    print(word, in_dict)
+
+    if in_dict:
+        if USAGE_DICT[word] < 40:
+            return True
+    else:
         return False
 
     return True
@@ -54,18 +69,15 @@ def __is_key(dict_file, word):
 def get_ideas(text):
     words = __keywords_matrix(text)
     ideas = []
-    dict_file = open(DICT_PATH, 'r')
 
     for phrase in words:
         idea = Idea(' '.join(phrase))
 
         for word in phrase:
 
-            if __is_key(dict_file, word):
+            if __is_key(word):
                 idea.add_keyword(word)
 
         ideas.append(idea)
-
-    dict_file.close()
 
     return ideas
