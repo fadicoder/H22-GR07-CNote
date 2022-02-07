@@ -2,6 +2,8 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import *
 import sys
+
+
 import wordextractor
 
 
@@ -85,12 +87,14 @@ class Window(QMainWindow):
         return welcome_widget
 
     def __notes_widget(self):
+
         notes_widget = QTabWidget()
+        keywords_widget = QWidget(self)
         root = QVBoxLayout()
         notes_widget.setLayout(root)
 
         title = QLabel('C-Note')
-        title.setFont(QFont("None", 20))
+        title.setFont(QFont('None', 20))
         root.addSpacerItem(QSpacerItem(0, 25))
         root.addWidget(title, 0, Qt.AlignCenter)
         root.addSpacerItem(QSpacerItem(0, 25))
@@ -103,7 +107,6 @@ class Window(QMainWindow):
         self.headLines_text.setFont(QFont('None', 12))
         self.headLines_text.setMaximumHeight(100)
         self.headLines_text.setPlaceholderText('Write your headlines here...')
-        self.keywords_text.setMaximumWidth(400)
         self.keywords_text.setFont(QFont('None', 12))
         self.keywords_text.setEnabled(False)
         self.keywords_text.setPlaceholderText('Click on submit to generate your keywords')
@@ -113,29 +116,45 @@ class Window(QMainWindow):
         self.summery_text.setFont(QFont('None', 12))
         self.summery_text.setPlaceholderText('Write your summery here...')
         self.keyword_line = QLineEdit()
-        add_btn = QPushButton('Add keyword')
+        self.add_btn = QPushButton('Add keyword')
+        generate_btn = QPushButton('Generate keywords')
         submit_btn = QPushButton('Submit')
         submit_btn.setMaximumWidth(50)
 
-        submit_btn.clicked.connect(lambda: wordextractor.keywords_matrix(self.notes_text.toPlainText()))
-        add_btn.clicked.connect(lambda: self.add_keyword(self.keyword_line.text()))
+        self.add_btn.clicked.connect(lambda: self.add_keyword(self.keyword_line.text()))
+        generate_btn.clicked.connect(
+            lambda: self.add_keyword(wordextractor.get_ideas(self.notes_text.toPlainText()))
+        )
 
         texts_layout.addWidget(self.headLines_text)
-        keywords_layout = QVBoxLayout()
+
+        keywords_layout = QVBoxLayout(keywords_widget)
         keywords_layout.addWidget(self.keywords_text)
         add_key_layout = QHBoxLayout()
         add_key_layout.addWidget(self.keyword_line)
-        add_key_layout.addWidget(add_btn)
+        add_key_layout.addWidget(self.add_btn)
+        add_key_layout.addWidget(generate_btn)
+
         keywords_layout.addLayout(add_key_layout)
-        middle_text_layout.addLayout(keywords_layout)
-        middle_text_layout.addWidget(self.notes_text)
+        notes_widget.setLayout(keywords_layout)
+        middle_text_layout.addWidget(keywords_widget, 2)
+        middle_text_layout.addWidget(self.notes_text, 8)
         texts_layout.addLayout(middle_text_layout)
         texts_layout.addWidget(self.summery_text)
-        texts_layout.addWidget(submit_btn)
+        bottom_submit_btn = QHBoxLayout()
+        bottom_submit_btn.addWidget(submit_btn)
+        bottom_submit_btn.setAlignment(Qt.AlignRight)
+        texts_layout.addLayout(bottom_submit_btn)
 
         root.addLayout(texts_layout)
 
         return notes_widget
+
+    def enable_keyword(self):
+        if self.notes_text.selectionChanged():
+            self.add_btn.setEnabled(True)
+        else:
+            self.add_btn.setEnabled(False)
 
     def login(self):
         self.menubar.setVisible(True)
@@ -154,15 +173,22 @@ class Window(QMainWindow):
         print("Save!")
 
     def add_keyword(self, keys):
+
+        if len(keys) == 0:
+            return
+
         new_text = ''
         if type(keys) == str:
-            new_text = keys
+            new_text = keys + '\n'
             self.keyword_line.clear()
 
         elif type(keys) == list:
-            new_text = '\n'.join(keys)
 
-        text = self.keywords_text.toPlainText() + new_text + '\n'
+            new_text = ''
+            for key in keys:
+                new_text += str(key) + '\n'
+
+        text = self.keywords_text.toPlainText() + new_text
         self.keywords_text.setPlainText(text)
 
     def launch(self):
