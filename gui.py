@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import *
 import sys
-import wordextractor
+import dictmanager
 
 
 class Window(QMainWindow):
@@ -11,10 +11,10 @@ class Window(QMainWindow):
         self.app = QApplication(sys.argv)
         super().__init__()
 
-        self.summery_text = QPlainTextEdit()
-        self.notes_text = QPlainTextEdit()
-        self.keywords_text = QPlainTextEdit()
-        self.headLines_text = QPlainTextEdit()
+        self.summery_text = QTextEdit()
+        self.notes_text = QTextEdit()
+        self.keywords_text = QTextEdit()
+        self.headLines_text = QTextEdit()
 
         self.widgets_lst = QStackedWidget()
         self.setCentralWidget(self.widgets_lst)
@@ -53,6 +53,7 @@ class Window(QMainWindow):
         account_menu.addAction(signout_act)
 
     def __welcome_widget(self):
+
         welcome_widget = QWidget()
         root = QVBoxLayout()
         welcome_widget.setLayout(root)
@@ -79,7 +80,7 @@ class Window(QMainWindow):
         root.addWidget(self.password_input)
         root.addSpacing(20)
         root.addLayout(buttons)
-
+        
         root.setAlignment(Qt.AlignCenter)
 
         return welcome_widget
@@ -121,8 +122,9 @@ class Window(QMainWindow):
 
         self.add_btn.clicked.connect(lambda: self.add_keyword(self.keyword_line.text()))
         generate_btn.clicked.connect(
-            lambda: self.add_keyword(wordextractor.get_ideas(self.notes_text.toPlainText()))
+            lambda: self.add_keyword(dictmanager.get_ideas(self.notes_text.toPlainText()))
         )
+
 
         texts_layout.addWidget(self.headLines_text)
 
@@ -136,7 +138,7 @@ class Window(QMainWindow):
         keywords_layout.addLayout(add_key_layout)
         notes_widget.setLayout(keywords_layout)
         middle_text_layout.addWidget(keywords_widget, 2)
-        middle_text_layout.addWidget(self.notes_text, 8)
+        middle_text_layout.addWidget(self.notes_text, 10)
         texts_layout.addLayout(middle_text_layout)
         texts_layout.addWidget(self.summery_text)
         bottom_submit_btn = QHBoxLayout()

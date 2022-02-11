@@ -27,14 +27,12 @@ class Idea:
     def __str__(self):
         return ' '.join(self.keywords)
 
-    def __len__(self):
-        return len(self.keywords)
-
     def is_empty(self):
         return len(self.keywords) == 0
 
     def add_keyword(self, new_keyword):
-        self.keywords.append(new_keyword)
+        if new_keyword not in self.keywords:
+            self.keywords.append(new_keyword)
 
 
 def words_matrix(text):
