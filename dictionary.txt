@@ -2,7 +2,7 @@ ceci 63
 deux 79
 est 63
 et 92
-fais 84
+fais 30
 je 84
 la 100
 phrase 30

@@ -31,6 +31,11 @@ class Window(QMainWindow):
         self.menubar.setVisible(False)
         self.setMenuBar(self.menubar)
 
+        self.main_toolbar = QToolBar()
+        self.__init_toolbar()
+
+        self.addToolBar(self.main_toolbar)
+
     def __init_menubar(self):
         save_act = QAction('Save', self)
         save_act.setShortcut('Ctrl+S')
@@ -51,6 +56,27 @@ class Window(QMainWindow):
         account_menu.addAction(save_act)
         account_menu.addSeparator()
         account_menu.addAction(signout_act)
+
+    def __init_toolbar(self):
+
+        self.size_spin = QSpinBox()
+        self.size_spin.setValue(15)
+        self.size_spin.valueChanged.connect(self.__set_Font)
+
+        self.main_toolbar.addWidget(self.size_spin)
+
+    def __current_widget(self):
+
+        if self.notes_text.isActiveWindow():
+            return self.notes_text
+        if self.summery_text.isActiveWindow():
+            return self.summery_text
+        if self.headLines_text.isActiveWindow():
+            return self.headLines_text
+
+    def __set_Font(self):
+        wid = self.__current_widget()
+        wid.setCurrentFont(QFont('None', self.size_spin.value()))
 
     def __welcome_widget(self):
 
@@ -103,23 +129,25 @@ class Window(QMainWindow):
         middle_text_layout = QHBoxLayout()
         middle_text_layout.setAlignment(Qt.AlignVCenter)
 
-        self.headLines_text.setFont(QFont('None', 12))
+
         self.headLines_text.setMaximumHeight(100)
+        self.notes_text.setFont(QFont('None', 15))
         self.headLines_text.setPlaceholderText('Write your headlines here...')
-        self.keywords_text.setFont(QFont('None', 12))
+        self.headLines_text.setFont(QFont('None', 15))
         self.keywords_text.setEnabled(False)
         self.keywords_text.setPlaceholderText('Click on submit to generate your keywords')
-        self.notes_text.setFont(QFont('None', 12))
+        self.keywords_text.setFont(QFont('None', 15))
         self.notes_text.setPlaceholderText('Write your notes here...')
         self.summery_text.setMaximumHeight(100)
-        self.summery_text.setFont(QFont('None', 12))
         self.summery_text.setPlaceholderText('Write your summery here...')
+        self.summery_text.setFont(QFont('None', 15))
         self.keyword_line = QLineEdit()
         self.add_btn = QPushButton('Add keyword')
         generate_btn = QPushButton('Generate keywords')
         submit_btn = QPushButton('Submit')
         submit_btn.setMaximumWidth(50)
 
+        submit_btn.clicked.connect(self.count_words)
         self.add_btn.clicked.connect(lambda: self.add_keyword(self.keyword_line.text()))
         generate_btn.clicked.connect(
             lambda: self.add_keyword(dictmanager.get_ideas(self.notes_text.toPlainText()))
@@ -191,6 +219,14 @@ class Window(QMainWindow):
         text = self.keywords_text.toPlainText() + new_text
         self.keywords_text.setPlainText(text)
 
+    def count_words(self):
+        a = self.notes_text
+        print(a)
+
     def launch(self):
         self.showMaximized()
         sys.exit(self.app.exec())
+
+
+
+
