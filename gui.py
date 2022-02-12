@@ -134,8 +134,8 @@ class Window(QMainWindow):
         self.notes_text.setFont(QFont('None', 15))
         self.headLines_text.setPlaceholderText('Write your headlines here...')
         self.headLines_text.setFont(QFont('None', 15))
-        self.keywords_text.setEnabled(False)
-        self.keywords_text.setPlaceholderText('Click on submit to generate your keywords')
+        self.keywords_text.setReadOnly(True)
+        self.keywords_text.setPlaceholderText('Click on generate to generate your keywords')
         self.keywords_text.setFont(QFont('None', 15))
         self.notes_text.setPlaceholderText('Write your notes here...')
         self.summery_text.setMaximumHeight(100)
@@ -143,16 +143,15 @@ class Window(QMainWindow):
         self.summery_text.setFont(QFont('None', 15))
         self.keyword_line = QLineEdit()
         self.add_btn = QPushButton('Add keyword')
-        generate_btn = QPushButton('Generate keywords')
+        generate_btn = QPushButton('Generate')
         submit_btn = QPushButton('Submit')
         submit_btn.setMaximumWidth(50)
 
-        submit_btn.clicked.connect(self.count_words)
+        self.notes_text.setLineWrapMode(QTextEdit.NoWrap)
         self.add_btn.clicked.connect(lambda: self.add_keyword(self.keyword_line.text()))
         generate_btn.clicked.connect(
-            lambda: self.add_keyword(dictmanager.get_ideas(self.notes_text.toPlainText()))
+            lambda: self.add_keyword(dictmanager.get_ideas(self.notes_text.toPlainText(), self.get_max_fonts()))
         )
-
 
         texts_layout.addWidget(self.headLines_text)
 
@@ -214,14 +213,35 @@ class Window(QMainWindow):
 
             new_text = ''
             for key in keys:
-                new_text += str(key) + '\n'
+                last_font = self.keywords_text.font()
+                self.keywords_text.append(str(key))
+                self.keywords_text.setCurrentFont(key.max_font)
+                self.keywords_text.append(' ')
+                self.keywords_text.setCurrentFont(last_font)
 
         text = self.keywords_text.toPlainText() + new_text
         self.keywords_text.setPlainText(text)
 
-    def count_words(self):
-        a = self.notes_text
-        print(a)
+    def get_max_fonts(self):
+        doc = self.notes_text.document()
+        self.notes_text.moveCursor(QTextCursor.Start)
+        max_fonts = []
+        for i in range(doc.lineCount()):
+
+            current_font = self.notes_text.currentFont()
+            max_font = current_font
+
+            # The next five line calculate the biggest font of each line
+            for j in range(doc.findBlockByNumber(i).length()):
+                self.notes_text.moveCursor(QTextCursor.NextCharacter)
+                current_font = self.notes_text.currentFont()
+                if current_font.pointSize() > max_font.pointSize():
+                    max_font = self.notes_text.currentFont()
+
+            max_fonts.append(max_font)
+            self.notes_text.moveCursor(QTextCursor.NextBlock)
+
+        return max_fonts
 
     def launch(self):
         self.showMaximized()

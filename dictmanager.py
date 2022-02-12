@@ -1,3 +1,4 @@
+from PyQt5.QtGui import QFont
 from sortedcontainers import sorteddict
 import threading
 
@@ -18,14 +19,20 @@ dict_thread.start()
 
 class Idea:
 
-    def __init__(self, phrase: str, keywords=None):
+    def __init__(self, phrase: str, line: int, max_font: QFont, keywords=None):
+
         if keywords is None:
             keywords = list()
         self.keywords = keywords
         self.phrase = phrase
+        self.line = line
+        self.max_font = max_font
 
     def __str__(self):
-        return ' '.join(self.keywords)
+        string = ' '.join(self.keywords).strip()
+        if string == '':
+            return '\n'
+        return string
 
     def is_empty(self):
         return len(self.keywords) == 0
@@ -36,10 +43,10 @@ class Idea:
 
 
 def words_matrix(text):
-    phrases = text.split(".")
+    phrases = text.split("\n")
     words = []
 
-    for phrase in phrases:
+    for i, phrase in enumerate(phrases):
         words.append(phrase.split(' '))
 
     return words
@@ -63,19 +70,17 @@ def is_key(word):
     return False
 
 
-def get_ideas(text):
+def get_ideas(text, max_fonts):
     words = words_matrix(text)
     ideas = []
 
-    for phrase in words:
-        idea = Idea(' '.join(phrase))
+    for i, phrase in enumerate(words):
+        idea = Idea(' '.join(phrase), i, max_fonts[i])
 
         for word in phrase:
 
             if is_key(word):
                 idea.add_keyword(word)
-
-        if not idea.is_empty():
-            ideas.append(idea)
+                ideas.append(idea)
 
     return ideas
