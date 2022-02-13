@@ -148,9 +148,9 @@ class Window(QMainWindow):
         submit_btn.setMaximumWidth(50)
 
         self.notes_text.setLineWrapMode(QTextEdit.NoWrap)
-        self.add_btn.clicked.connect(lambda: self.add_keyword(self.keyword_line.text()))
+        self.add_btn.clicked.connect(lambda: self.write_keys(self.keyword_line.text()))
         generate_btn.clicked.connect(
-            lambda: self.add_keyword(dictmanager.get_ideas(self.notes_text.toPlainText(), self.get_max_fonts()))
+            lambda: self.write_keys(dictmanager.get_ideas(self.notes_text.toPlainText(), self.get_max_fonts()))
         )
 
         texts_layout.addWidget(self.headLines_text)
@@ -199,28 +199,23 @@ class Window(QMainWindow):
     def save(self):
         print("Save!")
 
-    def add_keyword(self, keys):
+    def write_keys(self, keys):
 
         if len(keys) == 0:
             return
 
-        new_text = ''
-        if type(keys) == str:
-            new_text = keys + '\n'
-            self.keyword_line.clear()
-
         elif type(keys) == list:
 
-            new_text = ''
             for key in keys:
                 last_font = self.keywords_text.font()
-                self.keywords_text.append(str(key))
+                self.keywords_text.insertPlainText(str(key))
+                print(str(key))
                 self.keywords_text.setCurrentFont(key.max_font)
-                self.keywords_text.append(' ')
+                self.keywords_text.insertPlainText(' ')
                 self.keywords_text.setCurrentFont(last_font)
+                self.keywords_text.insertPlainText('\n')
 
-        text = self.keywords_text.toPlainText() + new_text
-        self.keywords_text.setPlainText(text)
+
 
     def get_max_fonts(self):
         doc = self.notes_text.document()

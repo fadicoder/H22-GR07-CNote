@@ -29,10 +29,9 @@ class Idea:
         self.max_font = max_font
 
     def __str__(self):
-        string = ' '.join(self.keywords).strip()
-        if string == '':
-            return '\n'
-        return string
+        if self.is_empty():
+            return ''
+        return ' '.join(self.keywords)
 
     def is_empty(self):
         return len(self.keywords) == 0
@@ -81,6 +80,6 @@ def get_ideas(text, max_fonts):
 
             if is_key(word):
                 idea.add_keyword(word)
-                ideas.append(idea)
+        ideas.append(idea)
 
     return ideas
