@@ -61,8 +61,11 @@ class Window(QMainWindow):
 
         self.size_spin = QSpinBox()
         self.size_spin.setValue(15)
-        self.size_spin.valueChanged.connect(self.__set_Font)
+        self.size_spin.valueChanged.connect(self.__set_font_size)
 
+        self.font_combo = QFontComboBox()
+        self.font_combo.currentFontChanged.connect(self.__set_font_family)
+        self.main_toolbar.addWidget(self.font_combo)
         self.main_toolbar.addWidget(self.size_spin)
 
     def __current_widget(self):
@@ -74,9 +77,13 @@ class Window(QMainWindow):
         if self.headLines_text.isActiveWindow():
             return self.headLines_text
 
-    def __set_Font(self):
+    def __set_font_size(self):
         wid = self.__current_widget()
-        wid.setCurrentFont(QFont('None', self.size_spin.value()))
+        wid.setFontPointSize(self.size_spin.value())
+
+    def __set_font_family(self):
+        wid = self.__current_widget()
+        wid.setFontFamily(self.font_combo.currentFont().family())
 
     def __welcome_widget(self):
 
@@ -216,18 +223,20 @@ class Window(QMainWindow):
                 self.keywords_text.insertPlainText('\n')
 
 
-
     def get_max_fonts(self):
         doc = self.notes_text.document()
         self.notes_text.moveCursor(QTextCursor.Start)
         max_fonts = []
+
         for i in range(doc.lineCount()):
 
             current_font = self.notes_text.currentFont()
             max_font = current_font
 
-            # The next five line calculate the biggest font of each line
-            for j in range(doc.findBlockByNumber(i).length()):
+
+            # This second for loop calculates the biggest font of the line "i"
+            for j in range(doc.findBlockByLineNumber(i).length()-1):
+                print(str(doc.findBlockByLineNumber(i)))
                 self.notes_text.moveCursor(QTextCursor.NextCharacter)
                 current_font = self.notes_text.currentFont()
                 if current_font.pointSize() > max_font.pointSize():

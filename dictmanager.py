@@ -42,10 +42,10 @@ class Idea:
 
 
 def words_matrix(text):
-    phrases = text.split("\n")
+    phrases = text.lower().split("\n")
     words = []
 
-    for i, phrase in enumerate(phrases):
+    for phrase in phrases:
         words.append(phrase.split(' '))
 
     return words
