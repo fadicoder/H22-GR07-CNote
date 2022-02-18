@@ -1,8 +1,8 @@
+import dictmanager
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import *
 import sys
-import dictmanager
 
 
 class Window(QMainWindow):
@@ -59,14 +59,33 @@ class Window(QMainWindow):
 
     def __init_toolbar(self):
 
+        font_bar = QToolBar()
+
         self.size_spin = QSpinBox()
         self.size_spin.setValue(15)
         self.size_spin.valueChanged.connect(self.__set_font_size)
 
         self.font_combo = QFontComboBox()
         self.font_combo.currentFontChanged.connect(self.__set_font_family)
-        self.main_toolbar.addWidget(self.font_combo)
-        self.main_toolbar.addWidget(self.size_spin)
+
+        font_bar.addWidget(self.size_spin)
+        font_bar.addWidget(self.font_combo)
+
+        align_left_act = QAction(QIcon('resources/AlignLeft.png'), 'Align left', self)
+        align_center_act = QAction(QIcon('resources/AlignCenter.png'), 'Align center', self)
+        align_right_act = QAction(QIcon('resources/AlignRight.png'), 'Align right', self)
+        align_justify_act = QAction(QIcon('resources/AlignJustify.png'), 'Align justify', self)
+        align_left_act.triggered.connect(lambda: self.__current_widget().setAlignment(Qt.AlignLeft))
+        align_center_act.triggered.connect(lambda: self.__current_widget().setAlignment(Qt.AlignCenter))
+        align_right_act.triggered.connect(lambda: self.__current_widget().setAlignment(Qt.AlignRight))
+        align_justify_act.triggered.connect(lambda: self.__current_widget().setAlignment(Qt.AlignJustify))
+
+        alignment_bar = QToolBar()
+        alignment_bar.addActions([align_left_act, align_center_act, align_right_act, align_justify_act])
+
+        self.main_toolbar.addWidget(font_bar)
+        self.main_toolbar.addWidget(alignment_bar)
+
 
     def __current_widget(self):
 
@@ -222,7 +241,6 @@ class Window(QMainWindow):
                 self.keywords_text.setCurrentFont(last_font)
                 self.keywords_text.insertPlainText('\n')
 
-
     def get_max_fonts(self):
         doc = self.notes_text.document()
         self.notes_text.moveCursor(QTextCursor.Start)
@@ -232,6 +250,7 @@ class Window(QMainWindow):
 
             current_font = self.notes_text.currentFont()
             max_font = current_font
+
 
 
             # This second for loop calculates the biggest font of the line "i"
@@ -246,6 +265,11 @@ class Window(QMainWindow):
             self.notes_text.moveCursor(QTextCursor.NextBlock)
 
         return max_fonts
+
+    def init_shown_font(self):
+        current_font = self.__current_widget().currentFont()
+        self.font_combo.setFont(current_font)
+        self.size_spin.setValue(current_font.pointSize())
 
     def launch(self):
         self.showMaximized()
