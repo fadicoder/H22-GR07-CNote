@@ -1,8 +1,8 @@
 import dictmanager
+import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import *
-import sys
 
 
 class Window(QMainWindow):
@@ -42,8 +42,8 @@ class Window(QMainWindow):
         save_act.setStatusTip('Saving...')
         save_act.triggered.connect(self.save)
 
-        signout_act = QAction('Sign out', self)
-        signout_act.triggered.connect(self.show_welcome_page)
+        sign_out_act = QAction('Sign out', self)
+        sign_out_act.triggered.connect(self.show_welcome_page)
 
         exit_act = QAction('exit', self)
         exit_act.setShortcut('Ctrl+Q')
@@ -55,7 +55,7 @@ class Window(QMainWindow):
         account_menu = self.menubar.addMenu('Account')
         account_menu.addAction(save_act)
         account_menu.addSeparator()
-        account_menu.addAction(signout_act)
+        account_menu.addAction(sign_out_act)
 
     def __init_toolbar(self):
 
@@ -74,7 +74,7 @@ class Window(QMainWindow):
         align_left_act = QAction(QIcon('resources/AlignLeft.png'), 'Align left', self)
         align_center_act = QAction(QIcon('resources/AlignCenter.png'), 'Align center', self)
         align_right_act = QAction(QIcon('resources/AlignRight.png'), 'Align right', self)
-        align_justify_act = QAction(QIcon('resources/AlignJustify.png'), 'Align justify', self)
+        align_justify_act = QAction(QIcon('resources/AlignJustify.png'), 'Justify', self)
         align_left_act.triggered.connect(lambda: self.__current_widget().setAlignment(Qt.AlignLeft))
         align_center_act.triggered.connect(lambda: self.__current_widget().setAlignment(Qt.AlignCenter))
         align_right_act.triggered.connect(lambda: self.__current_widget().setAlignment(Qt.AlignRight))
@@ -89,12 +89,15 @@ class Window(QMainWindow):
 
     def __current_widget(self):
 
-        if self.notes_text.isActiveWindow():
-            return self.notes_text
-        if self.summery_text.isActiveWindow():
-            return self.summery_text
-        if self.headLines_text.isActiveWindow():
+        if self.headLines_text.hasFocus():
             return self.headLines_text
+        if self.notes_text.hasFocus():
+            return self.notes_text
+        if self.summery_text.hasFocus():
+            return self.summery_text
+
+
+        return QTextEdit()
 
     def __set_font_size(self):
         wid = self.__current_widget()
@@ -132,7 +135,7 @@ class Window(QMainWindow):
         root.addWidget(self.password_input)
         root.addSpacing(20)
         root.addLayout(buttons)
-        
+
         root.setAlignment(Qt.AlignCenter)
 
         return welcome_widget
@@ -274,7 +277,3 @@ class Window(QMainWindow):
     def launch(self):
         self.showMaximized()
         sys.exit(self.app.exec())
-
-
-
-
