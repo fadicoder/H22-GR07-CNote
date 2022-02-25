@@ -86,7 +86,6 @@ class Window(QMainWindow):
         self.main_toolbar.addWidget(font_bar)
         self.main_toolbar.addWidget(alignment_bar)
 
-
     def __current_widget(self):
 
         if self.headLines_text.hasFocus():
@@ -96,16 +95,24 @@ class Window(QMainWindow):
         if self.summery_text.hasFocus():
             return self.summery_text
 
+        return QTextEdit()
+
+    def __last_widget(self):
+
+        if self.notes_text.previousInFocusChain():
+            return self.notes_text
+        if self.headLines_text.previousInFocusChain():
+            return self.headLines_text
+        if self.summery_text.previousInFocusChain():
+            return self.summery_text
 
         return QTextEdit()
 
     def __set_font_size(self):
-        wid = self.__current_widget()
-        wid.setFontPointSize(self.size_spin.value())
+        self.__last_widget().setFontPointSize(self.size_spin.value())
 
     def __set_font_family(self):
-        wid = self.__current_widget()
-        wid.setFontFamily(self.font_combo.currentFont().family())
+        self.__last_widget().setFontFamily(self.font_combo.currentFont().family())
 
     def __welcome_widget(self):
 
@@ -175,6 +182,7 @@ class Window(QMainWindow):
         generate_btn = QPushButton('Generate')
         submit_btn = QPushButton('Submit')
         submit_btn.setMaximumWidth(50)
+        self.notes_text.verticalScrollBar().sliderMoved.connect(self.__move_keys_bar)
 
         self.notes_text.setLineWrapMode(QTextEdit.NoWrap)
         self.add_btn.clicked.connect(lambda: self.write_keys(self.keyword_line.text()))
@@ -273,6 +281,9 @@ class Window(QMainWindow):
         current_font = self.__current_widget().currentFont()
         self.font_combo.setFont(current_font)
         self.size_spin.setValue(current_font.pointSize())
+
+    def __move_keys_bar(self):
+        self.keywords_text.verticalScrollBar().setSliderPosition(self.notes_text.verticalScrollBar().sliderPosition())
 
     def launch(self):
         self.showMaximized()
