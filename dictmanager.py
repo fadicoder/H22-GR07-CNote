@@ -7,17 +7,26 @@ USAGE_DICT = sorteddict.SortedDict()
 
 
 def open_dict():
+    """
+    This function fill the ordered dictionary USAGE_DICT with the words written in the file 'dictionary.txt'.
+    The words are the keys and there value is an int that represent the percentage of usage of the word.
+    """
     with open(DICT_PATH, 'r') as dict_file:
         for line in dict_file.readlines():
             word_info = line.split(' ')
             USAGE_DICT[word_info[0]] = int(word_info[1])
 
 
+# Opening the dictionary with a seperated thread:
 dict_thread = threading.Thread(target=open_dict)
 dict_thread.start()
 
 
 class Idea:
+    """
+    This class defines the concept of an idea which is a list of keywords associated with a sentace.
+    The idea object also contains the biggest font of the sentence for front-end purposes.
+    """
 
     def __init__(self, phrase: str, line: int, max_font: QFont, keywords=None):
 
@@ -42,6 +51,9 @@ class Idea:
 
 
 def words_matrix(text):
+    """
+    This function create a matrix of words from a string text. Each line of text represent a line of the matrix.
+    """
     phrases = text.lower().split("\n")
     words = []
 
@@ -52,6 +64,13 @@ def words_matrix(text):
 
 
 def is_key(word):
+    """
+    This function verify if the word given in argument is key with the dictionary USAGE_DICT.
+    A word is key if the percentage of its usage is less than 40% according to the dictionary.
+
+    :param word: string of the word to verify.
+    :return: True if the word is key and False if it is not.
+    """
     word = word.lower()
     if word == '' or word == ' ':
         return False
@@ -70,6 +89,15 @@ def is_key(word):
 
 
 def get_ideas(text, max_fonts):
+    """
+    This function analyses a text by extracting keywords.
+    Each line (sentence) of the text is associated with its keywords as an idea.
+    The function creates a list of ideas of all the text
+
+    :param text: the string that will be analysed
+    :param max_fonts: the biggest font of each line
+    :return: A list of the ideas of the text
+    """
     words = words_matrix(text)
     ideas = []
 

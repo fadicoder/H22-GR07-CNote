@@ -37,6 +37,9 @@ class Window(QMainWindow):
         self.addToolBar(self.main_toolbar)
 
     def __init_menubar(self):
+        """
+        Initializing the elements of the menubar
+        """
         save_act = QAction('Save', self)
         save_act.setShortcut('Ctrl+S')
         save_act.setStatusTip('Saving...')
@@ -98,6 +101,10 @@ class Window(QMainWindow):
         return QTextEdit()
 
     def __last_widget(self):
+        """
+        This function determines which was the last focused text widget.
+        :return: the last widget to have focus.
+        """
 
         if self.notes_text.previousInFocusChain():
             return self.notes_text
