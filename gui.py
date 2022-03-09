@@ -11,11 +11,6 @@ class Window(QMainWindow):
         self.app = QApplication(sys.argv)
         super().__init__()
 
-        self.summery_text = QTextEdit()
-        self.notes_text = QTextEdit()
-        self.keywords_text = QTextEdit()
-        self.headLines_text = QTextEdit()
-
         self.widgets_lst = QStackedWidget()
         self.setCentralWidget(self.widgets_lst)
         self.setWindowTitle("C-Note")
@@ -45,6 +40,10 @@ class Window(QMainWindow):
         save_act.setStatusTip('Saving...')
         save_act.triggered.connect(self.save)
 
+        load_act = QAction('Load', self)
+        load_act.setShortcut('Ctrl+L')
+        load_act.triggered.connect(self.load)
+
         sign_out_act = QAction('Sign out', self)
         sign_out_act.triggered.connect(self.show_welcome_page)
 
@@ -57,6 +56,7 @@ class Window(QMainWindow):
 
         account_menu = self.menubar.addMenu('Account')
         account_menu.addAction(save_act)
+        account_menu.addAction(load_act)
         account_menu.addSeparator()
         account_menu.addAction(sign_out_act)
 
@@ -115,64 +115,107 @@ class Window(QMainWindow):
 
         return QTextEdit()
 
-    def __set_font_size(self):
-        self.__last_widget().setFontPointSize(self.size_spin.value())
-
-    def __set_font_family(self):
-        self.__last_widget().setFontFamily(self.font_combo.currentFont().family())
-
     def __welcome_widget(self):
-
+        """
+        Built the graphical user interface
+        :return: the built welcome widget
+        """
         welcome_widget = QWidget()
         root = QVBoxLayout()
         welcome_widget.setLayout(root)
 
+        # Initilizing widget elements
         self.username_input = QLineEdit()
+        self.password_input = QLineEdit()
+        self.login_btn = QPushButton('Log in')
+        self.signup_btn = QPushButton('Sign up')
+        self.__welcome_wid_properties()
+
+        # Organizing elements in layouts
+        buttons = QHBoxLayout()
+        buttons.addWidget(self.login_btn)
+        buttons.addWidget(self.signup_btn)
+        root.addWidget(self.username_input)
+        root.addWidget(self.password_input)
+        root.addSpacing(20)
+        root.addLayout(buttons)
+        root.setAlignment(Qt.AlignCenter)
+
+        # setting on events
+        self.login_btn.clicked.connect(self.login)
+
+        return welcome_widget
+
+    def __welcome_wid_properties(self):
+        """
+        setting properties of the welcome widget elements.
+        """
         self.username_input.setPlaceholderText('Username')
         self.username_input.setFont(QFont('None', 12))
         self.username_input.setMaximumWidth(400)
-
-        self.password_input = QLineEdit()
         self.password_input.setPlaceholderText('Password')
         self.password_input.setFont(QFont('None', 12))
         self.password_input.setEchoMode(QLineEdit.Password)
         self.password_input.setMaximumWidth(400)
 
-        buttons = QHBoxLayout()
-        self.login_btn = QPushButton('Log in')
-        self.signup_btn = QPushButton('Sign up')
-        buttons.addWidget(self.login_btn)
-        buttons.addWidget(self.signup_btn)
-        self.login_btn.clicked.connect(self.login)
-
-        root.addWidget(self.username_input)
-        root.addWidget(self.password_input)
-        root.addSpacing(20)
-        root.addLayout(buttons)
-
-        root.setAlignment(Qt.AlignCenter)
-
-        return welcome_widget
-
     def __notes_widget(self):
+        """
+        Building note's widget graphical interface
+        :return: note's widget
+        """
 
         notes_widget = QTabWidget()
         keywords_widget = QWidget(self)
         root = QVBoxLayout()
         notes_widget.setLayout(root)
 
+        # Initilizing widget elements
         title = QLabel('C-Note')
         title.setFont(QFont('None', 20))
+        self.summery_text = QTextEdit()
+        self.notes_text = QTextEdit()
+        self.keywords_text = QTextEdit()
+        self.headLines_text = QTextEdit()
+        self.keyword_line = QLineEdit()
+        self.add_btn = QPushButton('Add keyword')
+        self.generate_btn = QPushButton('Generate')
+        self.__notes_wid_properties()
+
+        # Organizing elements in layouts
         root.addSpacerItem(QSpacerItem(0, 25))
         root.addWidget(title, 0, Qt.AlignCenter)
         root.addSpacerItem(QSpacerItem(0, 25))
-
         texts_layout = QVBoxLayout()
         texts_layout.setAlignment(Qt.AlignCenter)
         middle_text_layout = QHBoxLayout()
         middle_text_layout.setAlignment(Qt.AlignVCenter)
+        texts_layout.addWidget(self.headLines_text)
+        keywords_layout = QVBoxLayout(keywords_widget)
+        keywords_layout.addWidget(self.keywords_text)
+        add_key_layout = QHBoxLayout()
+        add_key_layout.addWidget(self.keyword_line)
+        add_key_layout.addWidget(self.add_btn)
+        add_key_layout.addWidget(self.generate_btn)
+        keywords_layout.addLayout(add_key_layout)
+        notes_widget.setLayout(keywords_layout)
+        middle_text_layout.addWidget(keywords_widget, 2)
+        middle_text_layout.addWidget(self.notes_text, 10)
+        texts_layout.addLayout(middle_text_layout)
+        texts_layout.addWidget(self.summery_text)
+        bottom_submit_btn = QHBoxLayout()
+        bottom_submit_btn.setAlignment(Qt.AlignRight)
+        texts_layout.addLayout(bottom_submit_btn)
+        root.addLayout(texts_layout)
 
+        # settings on events actions
+        self.__set_on_events_notes_wid()
 
+        return notes_widget
+
+    def __notes_wid_properties(self):
+        """
+        Initialize note's widget properties
+        """
         self.headLines_text.setMaximumHeight(100)
         self.notes_text.setFont(QFont('None', 15))
         self.headLines_text.setPlaceholderText('Write your headlines here...')
@@ -184,42 +227,21 @@ class Window(QMainWindow):
         self.summery_text.setMaximumHeight(100)
         self.summery_text.setPlaceholderText('Write your summery here...')
         self.summery_text.setFont(QFont('None', 15))
-        self.keyword_line = QLineEdit()
-        self.add_btn = QPushButton('Add keyword')
-        generate_btn = QPushButton('Generate')
-        submit_btn = QPushButton('Submit')
-        submit_btn.setMaximumWidth(50)
-        self.notes_text.verticalScrollBar().sliderMoved.connect(self.__move_keys_bar)
 
+    def __set_on_events_notes_wid(self):
+        self.notes_text.verticalScrollBar().valueChanged.connect(self.__move_keys_bar)
+        self.notes_text.verticalScrollBar().valueChanged.connect(self.__move_notes_bar)
         self.notes_text.setLineWrapMode(QTextEdit.NoWrap)
         self.add_btn.clicked.connect(lambda: self.write_keys(self.keyword_line.text()))
-        generate_btn.clicked.connect(
+        self.generate_btn.clicked.connect(
             lambda: self.write_keys(dictmanager.get_ideas(self.notes_text.toPlainText(), self.get_max_fonts()))
         )
 
-        texts_layout.addWidget(self.headLines_text)
+    def __set_font_size(self):
+        self.__last_widget().setFontPointSize(self.size_spin.value())
 
-        keywords_layout = QVBoxLayout(keywords_widget)
-        keywords_layout.addWidget(self.keywords_text)
-        add_key_layout = QHBoxLayout()
-        add_key_layout.addWidget(self.keyword_line)
-        add_key_layout.addWidget(self.add_btn)
-        add_key_layout.addWidget(generate_btn)
-
-        keywords_layout.addLayout(add_key_layout)
-        notes_widget.setLayout(keywords_layout)
-        middle_text_layout.addWidget(keywords_widget, 2)
-        middle_text_layout.addWidget(self.notes_text, 10)
-        texts_layout.addLayout(middle_text_layout)
-        texts_layout.addWidget(self.summery_text)
-        bottom_submit_btn = QHBoxLayout()
-        bottom_submit_btn.addWidget(submit_btn)
-        bottom_submit_btn.setAlignment(Qt.AlignRight)
-        texts_layout.addLayout(bottom_submit_btn)
-
-        root.addLayout(texts_layout)
-
-        return notes_widget
+    def __set_font_family(self):
+        self.__last_widget().setFontFamily(self.font_combo.currentFont().family())
 
     def enable_keyword(self):
         if self.notes_text.selectionChanged():
@@ -243,8 +265,14 @@ class Window(QMainWindow):
     def save(self):
         print("Save!")
 
-    def write_keys(self, keys):
+    def load(self):
+        print('Loading...')
 
+    def write_keys(self, keys):
+        """
+        This function write the list of ideas given in argument in the keywords_text.
+        :param keys: list of ideas to write
+        """
         if len(keys) == 0:
             return
 
@@ -260,6 +288,11 @@ class Window(QMainWindow):
                 self.keywords_text.insertPlainText('\n')
 
     def get_max_fonts(self):
+        """
+        This calculates the biggest font of each line and return thess fonts.
+        :return: A list of the biggest font of each line.
+        """
+
         doc = self.notes_text.document()
         self.notes_text.moveCursor(QTextCursor.Start)
         max_fonts = []
@@ -290,8 +323,16 @@ class Window(QMainWindow):
         self.size_spin.setValue(current_font.pointSize())
 
     def __move_keys_bar(self):
-        self.keywords_text.verticalScrollBar().setSliderPosition(self.notes_text.verticalScrollBar().sliderPosition())
+        pos = self.notes_text.verticalScrollBar().sliderPosition()
+        self.keywords_text.verticalScrollBar().setSliderPosition(pos)
+
+    def __move_notes_bar(self):
+        pos = self.keywords_text.verticalScrollBar().sliderPosition()
+        self.notes_text.verticalScrollBar().setSliderPosition(pos)
 
     def launch(self):
+        """
+        Launching the program!
+        """
         self.showMaximized()
         sys.exit(self.app.exec())
