@@ -1,5 +1,6 @@
 import dictmanager
 import sys
+
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import *
@@ -28,6 +29,10 @@ class Window(QMainWindow):
 
         self.main_toolbar = QToolBar()
         self.__init_toolbar()
+
+        self.genrated_keys = []
+        self.added_keys = []
+        self.all_keys = []
 
         self.addToolBar(self.main_toolbar)
 
@@ -91,26 +96,15 @@ class Window(QMainWindow):
 
     def __current_widget(self):
 
+
+
         if self.headLines_text.hasFocus():
             return self.headLines_text
         if self.notes_text.hasFocus():
+            print('note')
             return self.notes_text
         if self.summery_text.hasFocus():
-            return self.summery_text
-
-        return QTextEdit()
-
-    def __last_widget(self):
-        """
-        This function determines which was the last focused text widget.
-        :return: the last widget to have focus.
-        """
-
-        if self.notes_text.previousInFocusChain():
-            return self.notes_text
-        if self.headLines_text.previousInFocusChain():
-            return self.headLines_text
-        if self.summery_text.previousInFocusChain():
+            print('summery')
             return self.summery_text
 
         return QTextEdit()
@@ -170,8 +164,6 @@ class Window(QMainWindow):
         notes_widget.setLayout(root)
 
         # Initilizing widget elements
-        title = QLabel('C-Note')
-        title.setFont(QFont('None', 20))
         self.summery_text = QTextEdit()
         self.notes_text = QTextEdit()
         self.keywords_text = QTextEdit()
@@ -182,9 +174,6 @@ class Window(QMainWindow):
         self.__notes_wid_properties()
 
         # Organizing elements in layouts
-        root.addSpacerItem(QSpacerItem(0, 25))
-        root.addWidget(title, 0, Qt.AlignCenter)
-        root.addSpacerItem(QSpacerItem(0, 25))
         texts_layout = QVBoxLayout()
         texts_layout.setAlignment(Qt.AlignCenter)
         middle_text_layout = QHBoxLayout()
@@ -224,30 +213,38 @@ class Window(QMainWindow):
         self.keywords_text.setPlaceholderText('Click on generate to generate your keywords')
         self.keywords_text.setFont(QFont('None', 15))
         self.notes_text.setPlaceholderText('Write your notes here...')
-        self.summery_text.setMaximumHeight(100)
+        self.summery_text.setMaximumHeight(150)
         self.summery_text.setPlaceholderText('Write your summery here...')
         self.summery_text.setFont(QFont('None', 15))
+        self.notes_text.setLineWrapMode(QTextEdit.NoWrap)
 
     def __set_on_events_notes_wid(self):
         self.notes_text.verticalScrollBar().valueChanged.connect(self.__move_keys_bar)
         self.notes_text.verticalScrollBar().valueChanged.connect(self.__move_notes_bar)
-        self.notes_text.setLineWrapMode(QTextEdit.NoWrap)
         self.add_btn.clicked.connect(lambda: self.write_keys(self.keyword_line.text()))
         self.generate_btn.clicked.connect(
             lambda: self.write_keys(dictmanager.get_ideas(self.notes_text.toPlainText(), self.get_max_fonts()))
         )
+        self.summery_text.cursorPositionChanged.connect(self.__init_shown_font)
+        self.notes_text.cursorPositionChanged.connect(self.__init_shown_font)
+        self.keywords_text.cursorPositionChanged.connect(self.__init_shown_font)
 
     def __set_font_size(self):
-        self.__last_widget().setFontPointSize(self.size_spin.value())
+        self.__current_widget().setFontPointSize(self.size_spin.value())
 
     def __set_font_family(self):
-        self.__last_widget().setFontFamily(self.font_combo.currentFont().family())
+        self.__current_widget().setFontFamily(self.font_combo.currentFont().family())
 
     def enable_keyword(self):
         if self.notes_text.selectionChanged():
             self.add_btn.setEnabled(True)
         else:
             self.add_btn.setEnabled(False)
+
+    def __add_keyword(self, new_key):
+        self.added_keys.append(new_key)
+
+        self.added_keys.sort(key=dictmanager.get_ideas)
 
     def login(self):
         self.menubar.setVisible(True)
@@ -317,9 +314,10 @@ class Window(QMainWindow):
 
         return max_fonts
 
-    def init_shown_font(self):
+    def __init_shown_font(self):
         current_font = self.__current_widget().currentFont()
-        self.font_combo.setFont(current_font)
+
+        self.font_combo.setCurrentFont(current_font)
         self.size_spin.setValue(current_font.pointSize())
 
     def __move_keys_bar(self):

@@ -50,6 +50,10 @@ class Idea:
             self.keywords.append(new_keyword)
 
 
+def get_line(idea: Idea):
+    return idea.line
+
+
 def words_matrix(text):
     """
     This function create a matrix of words from a string text. Each line of text represent a line of the matrix.
