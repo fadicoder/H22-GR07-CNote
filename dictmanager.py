@@ -34,6 +34,9 @@ class Idea:
 
         if keywords is None:
             keywords = list()
+        if type(keywords) == str:
+            keywords = [keywords]
+
         self.keywords = keywords
         self.phrase = phrase
         self.line = line
@@ -51,7 +54,7 @@ class Idea:
         if new_keyword not in self.keywords:
             self.keywords.append(new_keyword)
 
-    def in_same_line(self, idea2):
+    def same_line(self, idea2):
         return self.line == idea2.line
 
 
@@ -102,7 +105,6 @@ def get_ideas(text, max_fonts):
     This function analyses a text by extracting keywords.
     Each line (sentence) of the text is associated with its keywords as an idea.
     The function creates a list of ideas of all the text
-
     :param text: the string that will be analysed
     :param max_fonts: the biggest font of each line
     :return: A list of the ideas of the text

@@ -265,23 +265,24 @@ class Window(QMainWindow):
     def load(self):
         notes.notes.notesload()
 
-    def write_keys(self, keys):
+    def write_keys(self):
         """
         Cette fonction écrit une liste d'idées données en argument dans le keywords_text.
         :param keys: liste d'idées à écrire.
         """
-        if keys is None:
+        if self.all_keys is None:
             return
+
         self.keywords_text.clear()
-        for i, key in enumerate(keys):
+
+        for i, key in enumerate(self.all_keys):
             last_font = self.keywords_text.font()
             self.keywords_text.insertPlainText(str(key))
-
             self.keywords_text.setCurrentFont(key.max_font)
             self.keywords_text.insertPlainText(' ')
             self.keywords_text.setCurrentFont(last_font)
-            if i < len(keys)-1:
-                if keys[i+1].in_same_line(key):  # Si il y a une autre idée dans la même ligne, ne pas sauter de ligne
+            if i < len(self.all_keys)-1:
+                if self.all_keys[i+1].same_line(key):  # Si il y a une autre idée dans la même ligne, ne pas sauter de ligne
                     continue
             self.keywords_text.insertPlainText('\n')
 
@@ -297,6 +298,7 @@ class Window(QMainWindow):
                 max_font = current_font
             current_font = self.notes_text.currentFont()
         """
+        print(new_key)
         phrase = self.notes_text.textCursor().selectedText()
         line = self.notes_text.textCursor().blockNumber()
         new_idea = dictmanager.Idea(phrase=phrase, line=line, keywords=new_key)
@@ -306,14 +308,14 @@ class Window(QMainWindow):
         self.all_keys = self.all_keys + self.added_keys
         self.all_keys.sort(key=dictmanager.get_line)
         self.adjust_idea_fonts()
-        self.write_keys(self.all_keys)
+        self.write_keys()
 
     def generate(self):
         self.genrated_keys = dictmanager.get_ideas(self.notes_text.toPlainText(), self.get_max_fonts())
         self.genrated_keys.sort(key=dictmanager.get_line)
         self.all_keys = self.added_keys + self.genrated_keys
         self.all_keys.sort(key=dictmanager.get_line)
-        self.write_keys(self.all_keys)
+        self.write_keys()
 
     def get_max_fonts(self):
         """
@@ -349,7 +351,7 @@ class Window(QMainWindow):
 
     def adjust_keys_with_notes(self):
         self.adjust_idea_fonts()
-        self.write_keys(self.all_keys)
+        self.write_keys()
 
     def __change_cursor(self):
         """
