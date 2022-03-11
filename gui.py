@@ -1,6 +1,6 @@
 import dictmanager
 import sys
-
+import notes
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import *
@@ -260,10 +260,11 @@ class Window(QMainWindow):
             self.login()
 
     def save(self):
-       self.sumtext = self.summery_text.toHtml()
-        self.headtext = self.headLines_text.toHtml()
-        self.maintext=self.notes_text.toHtml()
-        notes.notessaves(self.maintext,self.sumtext, self.headtext)
+
+        sumtext = self.summery_text.toHtml()
+        headtext = self.headLines_text.toHtml()
+        maintext = self.notes_text.toHtml()
+        notes.Notes.notessaves(maintext, sumtext, headtext)
 
     def load(self):
         print('Loading...')
