@@ -38,7 +38,7 @@ class Window(QMainWindow):
 
     def __init_menubar(self):
         """
-        Initializing the elements of the menubar
+        Initialise les éléments de la bare de menu.
         """
         save_act = QAction('Save', self)
         save_act.setShortcut('Ctrl+S')
@@ -111,21 +111,21 @@ class Window(QMainWindow):
 
     def __welcome_widget(self):
         """
-        Built the graphical user interface
-        :return: the built welcome widget
+        Construit l'interface graphique.
+        :return: construit le widget de bienvenue
         """
         welcome_widget = QWidget()
         root = QVBoxLayout()
         welcome_widget.setLayout(root)
 
-        # Initilizing widget elements
+        # Initilise les widgets
         self.username_input = QLineEdit()
         self.password_input = QLineEdit()
         self.login_btn = QPushButton('Log in')
         self.signup_btn = QPushButton('Sign up')
         self.__welcome_wid_properties()
 
-        # Organizing elements in layouts
+        # Organise les éléments
         buttons = QHBoxLayout()
         buttons.addWidget(self.login_btn)
         buttons.addWidget(self.signup_btn)
@@ -135,14 +135,14 @@ class Window(QMainWindow):
         root.addLayout(buttons)
         root.setAlignment(Qt.AlignCenter)
 
-        # setting on events
+        # action au clic
         self.login_btn.clicked.connect(self.login)
 
         return welcome_widget
 
     def __welcome_wid_properties(self):
         """
-        setting properties of the welcome widget elements.
+        établit les propriétés des widgets de bienvenue.
         """
         self.username_input.setPlaceholderText('Username')
         self.username_input.setFont(QFont('None', 12))
@@ -154,8 +154,8 @@ class Window(QMainWindow):
 
     def __notes_widget(self):
         """
-        Building note's widget graphical interface
-        :return: note's widget
+        Building interface graphique des widgets de note
+        :return: Widget de note
         """
 
         notes_widget = QTabWidget()
@@ -203,7 +203,7 @@ class Window(QMainWindow):
 
     def __notes_wid_properties(self):
         """
-        Initialize note's widget properties
+        Initialise les propriétés des widgets de notes
         """
         self.headLines_text.setMaximumHeight(100)
         self.notes_text.setFont(QFont('None', 15))
@@ -264,15 +264,15 @@ class Window(QMainWindow):
         sumtext = self.summery_text.toHtml()
         headtext = self.headLines_text.toHtml()
         maintext = self.notes_text.toHtml()
-        notes.Notes.notessaves(maintext, sumtext, headtext)
+        notes.notes.notessaves(maintext, sumtext, headtext)
 
     def load(self):
-        print('Loading...')
+        notes.notes.notesload()
 
     def write_keys(self, keys):
         """
-        This function write the list of ideas given in argument in the keywords_text.
-        :param keys: list of ideas to write
+        Cette fonction écrit une liste d'idées données en argument dans le keywords_text.
+        :param keys: liste d'idées à écrire.
         """
         if len(keys) == 0:
             return
@@ -290,8 +290,8 @@ class Window(QMainWindow):
 
     def get_max_fonts(self):
         """
-        This calculates the biggest font of each line and return thess fonts.
-        :return: A list of the biggest font of each line.
+        Ceci calcule la plus grande fonte d'une ligne et la retourne.
+        :return: Une liste de la plus grande fonte de chaque ligne.
         """
 
         doc = self.notes_text.document()
@@ -334,7 +334,7 @@ class Window(QMainWindow):
 
     def launch(self):
         """
-        Launching the program!
+        Lance le programme!
         """
         self.showMaximized()
         sys.exit(self.app.exec())

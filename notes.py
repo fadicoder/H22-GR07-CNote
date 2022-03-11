@@ -5,3 +5,9 @@ class notes:
         txtsl=maintxt+sumtxt+headtxt#mets ensemble le tout pour optimiser la sauvegarde
         #print(txtsl) #prinnt pour vérifier que ca fonctionne
         pickle.dump(txtsl, open("savetest.bin", "wb")) #sauvegarde le document
+    @staticmethod
+    def notesload():
+        txtsl='hey'
+        pickle.load(txtsl, open('savetest.bin','rb'))
+        print(txtsl)
+        return
