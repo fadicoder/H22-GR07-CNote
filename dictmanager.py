@@ -2,6 +2,8 @@ from PyQt5.QtGui import QFont
 from sortedcontainers import sorteddict
 import threading
 
+import dictmanager
+
 DICT_PATH = r'dictionary.txt'
 USAGE_DICT = sorteddict.SortedDict()
 
@@ -48,6 +50,9 @@ class Idea:
     def add_keyword(self, new_keyword):
         if new_keyword not in self.keywords:
             self.keywords.append(new_keyword)
+
+    def in_same_line(self, idea2):
+        return self.line == idea2.line
 
 
 def get_line(idea: Idea):

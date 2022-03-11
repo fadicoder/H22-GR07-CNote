@@ -96,8 +96,6 @@ class Window(QMainWindow):
 
     def __current_widget(self):
 
-
-
         if self.headLines_text.hasFocus():
             return self.headLines_text
         if self.notes_text.hasFocus():
@@ -221,30 +219,23 @@ class Window(QMainWindow):
     def __set_on_events_notes_wid(self):
         self.notes_text.verticalScrollBar().valueChanged.connect(self.__move_keys_bar)
         self.notes_text.verticalScrollBar().valueChanged.connect(self.__move_notes_bar)
-        self.add_btn.clicked.connect(lambda: self.write_keys(self.keyword_line.text()))
-        self.generate_btn.clicked.connect(
-            lambda: self.write_keys(dictmanager.get_ideas(self.notes_text.toPlainText(), self.get_max_fonts()))
-        )
-        self.summery_text.cursorPositionChanged.connect(self.__init_shown_font)
-        self.notes_text.cursorPositionChanged.connect(self.__init_shown_font)
-        self.keywords_text.cursorPositionChanged.connect(self.__init_shown_font)
+        self.add_btn.clicked.connect(lambda: self.__add_keyword(self.keyword_line.text()))
+        self.generate_btn.clicked.connect(self.generate)
+        self.summery_text.cursorPositionChanged.connect(self.__change_cursor)
+        self.notes_text.cursorPositionChanged.connect(self.__change_cursor)
+        self.headLines_text.cursorPositionChanged.connect(self.__change_cursor)
 
     def __set_font_size(self):
-        self.__current_widget().setFontPointSize(self.size_spin.value())
+        self.last_wid.setFontPointSize(self.size_spin.value())
 
     def __set_font_family(self):
-        self.__current_widget().setFontFamily(self.font_combo.currentFont().family())
+        self.last_wid.setFontFamily(self.font_combo.currentFont().family())
 
     def enable_keyword(self):
         if self.notes_text.selectionChanged():
             self.add_btn.setEnabled(True)
         else:
             self.add_btn.setEnabled(False)
-
-    def __add_keyword(self, new_key):
-        self.added_keys.append(new_key)
-
-        self.added_keys.sort(key=dictmanager.get_ideas)
 
     def login(self):
         self.menubar.setVisible(True)
@@ -272,21 +263,52 @@ class Window(QMainWindow):
     def write_keys(self, keys):
         """
         This function write the list of ideas given in argument in the keywords_text.
+        Remarque: La liste des keys donnée en paramètre doit être ordonnée en ordre croissant des ligne.
         :param keys: list of ideas to write
         """
-        if len(keys) == 0:
+        if keys is None:
             return
+        self.keywords_text.clear()
+        for i, key in enumerate(keys):
+            last_font = self.keywords_text.font()
+            self.keywords_text.insertPlainText(str(key))
 
-        elif type(keys) == list:
+            self.keywords_text.setCurrentFont(key.max_font)
+            self.keywords_text.insertPlainText(' ')
+            self.keywords_text.setCurrentFont(last_font)
+            if i < len(keys)-1:
+                if keys[i+1].in_same_line(key):  # Si il y a une autre idée dans la même ligne, ne pas sauter de ligne
+                    continue
+            self.keywords_text.insertPlainText('\n')
 
-            for key in keys:
-                last_font = self.keywords_text.font()
-                self.keywords_text.insertPlainText(str(key))
-                print(str(key))
-                self.keywords_text.setCurrentFont(key.max_font)
-                self.keywords_text.insertPlainText(' ')
-                self.keywords_text.setCurrentFont(last_font)
-                self.keywords_text.insertPlainText('\n')
+    def __add_keyword(self, new_key):
+
+        phrase = self.notes_text.textCursor().selectedText()
+        line = self.notes_text.textCursor().blockNumber()
+        doc = self.notes_text.document()
+        self.notes_text.moveCursor(QTextCursor.StartOfLine)
+        max_font = current_font = self.notes_text.currentFont()
+        for j in range(doc.findBlockByLineNumber(line).length() - 1):
+
+            self.notes_text.moveCursor(QTextCursor.NextCharacter)
+            if current_font.pointSize() > max_font.pointSize():
+                max_font = current_font
+            current_font = self.notes_text.currentFont()
+
+        new_idea = dictmanager.Idea(phrase, line, max_font, new_key)
+
+        self.added_keys.append(new_idea)
+        self.added_keys.sort(key=dictmanager.get_line)
+        self.all_keys = self.all_keys + self.added_keys
+        self.all_keys.sort(key=dictmanager.get_line)
+        self.write_keys(self.all_keys)
+
+    def generate(self):
+        self.genrated_keys = dictmanager.get_ideas(self.notes_text.toPlainText(), self.get_max_fonts())
+        self.genrated_keys.sort(key=dictmanager.get_line)
+        self.all_keys = self.added_keys + self.genrated_keys
+        self.all_keys.sort(key=dictmanager.get_line)
+        self.write_keys(self.all_keys)
 
     def get_max_fonts(self):
         """
@@ -303,23 +325,30 @@ class Window(QMainWindow):
             current_font = self.notes_text.currentFont()
             max_font = current_font
 
-
-
             # This second for loop calculates the biggest font of the line "i"
-            for j in range(doc.findBlockByLineNumber(i).length()-1):
-                print(str(doc.findBlockByLineNumber(i)))
+            for j in range(doc.findBlockByLineNumber(i).length() - 1):
                 self.notes_text.moveCursor(QTextCursor.NextCharacter)
                 current_font = self.notes_text.currentFont()
                 if current_font.pointSize() > max_font.pointSize():
-                    max_font = self.notes_text.currentFont()
+                    max_font = current_font
 
             max_fonts.append(max_font)
             self.notes_text.moveCursor(QTextCursor.NextBlock)
 
         return max_fonts
 
-    def __init_shown_font(self):
-        current_font = self.__current_widget().currentFont()
+    def adjust_keys_with_notes(self):
+        max_fonts = self.get_max_fonts()
+        for idea in self.all_keys:
+            idea.max_font = max_fonts[idea.line]
+
+    def __change_cursor(self):
+        """
+        This function is called every time the curser change its place. It will initilize shown font in the toolbar
+        Also it will set update the last text widget.
+        """
+        self.last_wid = self.__current_widget()
+        current_font = self.last_wid.currentFont()
 
         self.font_combo.setCurrentFont(current_font)
         self.size_spin.setValue(current_font.pointSize())
