@@ -260,7 +260,10 @@ class Window(QMainWindow):
             self.login()
 
     def save(self):
-        print("Save!")
+       self.sumtext = self.summery_text.toHtml()
+        self.headtext = self.headLines_text.toHtml()
+        self.maintext=self.notes_text.toHtml()
+        notes.notessaves(self.maintext,self.sumtext, self.headtext)
 
     def load(self):
         print('Loading...')
