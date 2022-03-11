@@ -56,14 +56,19 @@ class Window(QMainWindow):
         exit_act.setShortcut('Ctrl+Q')
         exit_act.triggered.connect(self.app.exit)
 
-        file_menu = self.menubar.addMenu('File')
-        file_menu.addAction(exit_act)
+        adjust_keys_act = QAction('Adjust keywords with text', self)
+        adjust_keys_act.setShortcut('F5')
+        adjust_keys_act.triggered.connect(self.adjust_keys_with_notes)
 
         account_menu = self.menubar.addMenu('Account')
         account_menu.addAction(save_act)
         account_menu.addAction(load_act)
         account_menu.addSeparator()
         account_menu.addAction(sign_out_act)
+
+        file_menu = self.menubar.addMenu('File')
+        file_menu.addAction(adjust_keys_act)
+        file_menu.addAction(exit_act)
 
     def __init_toolbar(self):
 
@@ -83,10 +88,10 @@ class Window(QMainWindow):
         align_center_act = QAction(QIcon('resources/AlignCenter.png'), 'Align center', self)
         align_right_act = QAction(QIcon('resources/AlignRight.png'), 'Align right', self)
         align_justify_act = QAction(QIcon('resources/AlignJustify.png'), 'Justify', self)
-        align_left_act.triggered.connect(lambda: self.__current_widget().setAlignment(Qt.AlignLeft))
-        align_center_act.triggered.connect(lambda: self.__current_widget().setAlignment(Qt.AlignCenter))
-        align_right_act.triggered.connect(lambda: self.__current_widget().setAlignment(Qt.AlignRight))
-        align_justify_act.triggered.connect(lambda: self.__current_widget().setAlignment(Qt.AlignJustify))
+        align_left_act.triggered.connect(lambda: self.__current_text().setAlignment(Qt.AlignLeft))
+        align_center_act.triggered.connect(lambda: self.__current_text().setAlignment(Qt.AlignCenter))
+        align_right_act.triggered.connect(lambda: self.__current_text().setAlignment(Qt.AlignRight))
+        align_justify_act.triggered.connect(lambda: self.__current_text().setAlignment(Qt.AlignJustify))
 
         alignment_bar = QToolBar()
         alignment_bar.addActions([align_left_act, align_center_act, align_right_act, align_justify_act])
@@ -94,7 +99,7 @@ class Window(QMainWindow):
         self.main_toolbar.addWidget(font_bar)
         self.main_toolbar.addWidget(alignment_bar)
 
-    def __current_widget(self):
+    def __current_text(self):
 
         if self.headLines_text.hasFocus():
             return self.headLines_text
@@ -281,9 +286,7 @@ class Window(QMainWindow):
             self.keywords_text.insertPlainText('\n')
 
     def __add_keyword(self, new_key):
-
-        phrase = self.notes_text.textCursor().selectedText()
-        line = self.notes_text.textCursor().blockNumber()
+        """
         doc = self.notes_text.document()
         self.notes_text.moveCursor(QTextCursor.StartOfLine)
         max_font = current_font = self.notes_text.currentFont()
@@ -293,13 +296,16 @@ class Window(QMainWindow):
             if current_font.pointSize() > max_font.pointSize():
                 max_font = current_font
             current_font = self.notes_text.currentFont()
-
-        new_idea = dictmanager.Idea(phrase, line, max_font, new_key)
+        """
+        phrase = self.notes_text.textCursor().selectedText()
+        line = self.notes_text.textCursor().blockNumber()
+        new_idea = dictmanager.Idea(phrase=phrase, line=line, keywords=new_key)
 
         self.added_keys.append(new_idea)
         self.added_keys.sort(key=dictmanager.get_line)
         self.all_keys = self.all_keys + self.added_keys
         self.all_keys.sort(key=dictmanager.get_line)
+        self.adjust_idea_fonts()
         self.write_keys(self.all_keys)
 
     def generate(self):
@@ -336,17 +342,21 @@ class Window(QMainWindow):
 
         return max_fonts
 
-    def adjust_keys_with_notes(self):
+    def adjust_idea_fonts(self):
         max_fonts = self.get_max_fonts()
         for idea in self.all_keys:
             idea.max_font = max_fonts[idea.line]
+
+    def adjust_keys_with_notes(self):
+        self.adjust_idea_fonts()
+        self.write_keys(self.all_keys)
 
     def __change_cursor(self):
         """
         This function is called every time the curser change its place. It will initilize shown font in the toolbar
         Also it will set update the last text widget.
         """
-        self.last_wid = self.__current_widget()
+        self.last_wid = self.__current_text()
         current_font = self.last_wid.currentFont()
 
         self.font_combo.setCurrentFont(current_font)

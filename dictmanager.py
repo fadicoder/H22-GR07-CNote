@@ -26,11 +26,11 @@ dict_thread.start()
 
 class Idea:
     """
-    This class defines the concept of an idea which is a list of keywords associated with a sentace.
-    The idea object also contains the biggest font of the sentence for front-end purposes.
+    Cette classe définit le concept d'une idée qui est une liste de mots-clés associées à une phrase
+    et au plus grand font de la phrase.
     """
 
-    def __init__(self, phrase: str, line: int, max_font: QFont, keywords=None):
+    def __init__(self, phrase: str, line: int, max_font: QFont = QFont('None', 15), keywords=None):
 
         if keywords is None:
             keywords = list()
