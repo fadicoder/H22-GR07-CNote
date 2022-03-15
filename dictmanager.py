@@ -1,8 +1,5 @@
-from PyQt5.QtGui import QFont
 from sortedcontainers import sorteddict
 import threading
-
-import dictmanager
 
 DICT_PATH = r'dictionary.txt'
 USAGE_DICT = sorteddict.SortedDict()
@@ -26,11 +23,11 @@ dict_thread.start()
 
 class Idea:
     """
-    Cette classe définit le concept d'une idée qui est une liste de mots-clés associées à une phrase
+    Cette classe définit le concept d'une idée qui est une liste de mots-clés associée à une phrase
     et au plus grand font de la phrase.
     """
 
-    def __init__(self, phrase: str, line: int, max_font: QFont = QFont('None', 15), keywords=None):
+    def __init__(self, phrase: str, line: int, max_font, keywords=None):
 
         if keywords is None:
             keywords = list()
@@ -57,9 +54,8 @@ class Idea:
     def same_line(self, idea2):
         return self.line == idea2.line
 
-
-def get_line(idea: Idea):
-    return idea.line
+    def get_line(self):
+        return self.line
 
 
 def words_matrix(text):
@@ -80,7 +76,7 @@ def is_key(word):
     This function verify if the word given in argument is key with the dictionary USAGE_DICT.
     A word is key if the percentage of its usage is less than 40% according to the dictionary.
 
-    :param word: string of the word to verify.
+    :param: word: string of the word to verify.
     :return: True if the word is key and False if it is not.
     """
     word = word.lower()
@@ -100,17 +96,21 @@ def is_key(word):
     return False
 
 
-def get_ideas(text, max_fonts):
+def get_ideas(text, max_fonts: list, ideas: list, from_to: tuple):
     """
-    This function analyses a text by extracting keywords.
-    Each line (sentence) of the text is associated with its keywords as an idea.
-    The function creates a list of ideas of all the text
-    :param text: the string that will be analysed
-    :param max_fonts: the biggest font of each line
-    :return: A list of the ideas of the text
+    Cette fonction analyse un text en déduisant ses mots clés. Chaque ligne est considérée comme une phrase.
+    Chaque phrase sera associée à une liste de mots clés dans un objet Idea.
+    Remarque : La liste de mots clé d'une idée pourrait être nulle.
+    La fonction met à jour la liste des idées donnée en paramètre en y inscrivant les idées déduites du text entre
+    les lignes indiquées par le tuple from_to.
+    :param text: le text à analyser.
+    :param max_fonts: les plus grands fonts des lignes à analyser.
+    :param ideas list des idées à mettre à jour.
+    :param from_to: indique la ligne de départ et la ligne de fin.
     """
+
+    delete_old_ideas(ideas, from_to)
     words = words_matrix(text)
-    ideas = []
 
     for i, phrase in enumerate(words):
         idea = Idea(' '.join(phrase), i, max_fonts[i])
@@ -119,6 +119,30 @@ def get_ideas(text, max_fonts):
 
             if is_key(word):
                 idea.add_keyword(word)
+
         ideas.append(idea)
 
-    return ideas
+
+def delete_old_ideas(ideas: list, from_to: tuple = None):
+    if from_to is None:
+        ideas.clear()
+        return
+
+    start = from_to[0]
+    end = from_to[1]
+
+    for idea in ideas:
+        if end <= idea.line >= start:
+            ideas.remove(idea)
+
+
+def add_idea_to_list(idea, line, ideas: list):
+    i = line
+    if len(ideas) < i:
+        while ideas[i].line < line:
+            i += 1
+        if ideas[i].line == line:
+            ideas[i] = idea
+        return
+
+    ideas.insert(i, idea)
