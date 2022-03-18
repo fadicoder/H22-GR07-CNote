@@ -1,17 +1,17 @@
 from PyQt6.QtGui import QTextCursor
 
 
-def move_cursor_to_line(text, line: int):
+def move_cursor_to_line(cursor: QTextCursor, line: int):
     """
-    Cette fonction déplace le curseur vers le block donné en paramètre
-    :param text : le text qui contient le curseur à déplacer
-    :param line : la ligne sur laquelle le curseur sera déplacé
+    Cette fonction déplace le curseur vers le block donné en paramètre.
+    :param cursor : le curseur à déplacer.
+    :param line : la ligne sur laquelle le curseur sera déplacé.
     """
 
-    while text.textCursor().blockNumber() < line:
-        text.moveCursor(QTextCursor.MoveOperation.NextBlock)
-    while text.textCursor().blockNumber() > line:
-        text.moveCursor(QTextCursor.MoveOperation.PreviousBlock)
+    while cursor.blockNumber() < line:
+        cursor.movePosition(QTextCursor.MoveOperation.NextBlock)
+    while cursor.blockNumber() > line:
+        cursor.movePosition(QTextCursor.MoveOperation.PreviousBlock)
 
 
 def get_max_font_by_line(text, i: int, cursor_on_line: bool):
@@ -25,7 +25,7 @@ def get_max_font_by_line(text, i: int, cursor_on_line: bool):
     """
 
     if not cursor_on_line:
-        move_cursor_to_line(text, i)
+        move_cursor_to_line(text.textCursor(), i)
 
     text.moveCursor(QTextCursor.MoveOperation.StartOfBlock)
     document = text.document()

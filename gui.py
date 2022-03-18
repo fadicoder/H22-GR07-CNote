@@ -1,17 +1,30 @@
 import dictmanager as dm
 import fontsoperations as fonts
 import notes
+import os
 import sys
 
 from PyQt6.QtWidgets import *
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import *
 
+'''
+- insert image dimensions
+- add draw
 
-DEFAULT_FONT = QFont('Calibri', 15)
+- repair adjust keys
+- high-light phrase
+- copy/past/delete ideas
+
+- colors+highliter
+
+- generate selected things repair
+- seperate toolbars
+'''
 
 
-class Window(QMainWindow):
+class MainWindow(QMainWindow):
+    DEFAULT_FONT = QFont('Calibri', 15)
 
     def __init__(self):
         self.app = QApplication(sys.argv)
@@ -34,11 +47,12 @@ class Window(QMainWindow):
 
         self.main_toolbar = QToolBar()
         self.__init_toolbar()
+        self.main_toolbar.setVisible(False)
         self.addToolBar(self.main_toolbar)
 
-        self.genrated_keys = []
+        self.generated_keys = []
         self.added_keys = []
-        self.all_keys = self.genrated_keys + self.added_keys
+        self.all_keys = self.generated_keys + self.added_keys
         self.images = []
         self.last_text = self.notes_text
 
@@ -69,6 +83,16 @@ class Window(QMainWindow):
         insert_image_act = QAction('Insert image', self)
         insert_image_act.triggered.connect(self.insert_image)
 
+        generate_act = QAction('Generate keywords', self)
+        generate_act.setShortcut('Ctrl+G')
+        generate_act.triggered.connect(self.generate)
+        clear_gen_keys_act = QAction('Clear generated keywords', self)
+        clear_gen_keys_act.triggered.connect(lambda: self.clear_keys(self.generated_keys))
+        clear_added_keys_act = QAction('Clear added keywords', self)
+        clear_added_keys_act.triggered.connect(lambda: self.clear_keys(self.added_keys))
+        clear_all_keys_act = QAction('Clear all keywords', self)
+        clear_all_keys_act.triggered.connect(lambda: self.clear_keys(self.all_keys))
+
         account_menu = self.menubar.addMenu('Account')
         account_menu.addAction(save_act)
         account_menu.addAction(load_act)
@@ -82,19 +106,23 @@ class Window(QMainWindow):
         insert_menu = self.menubar.addMenu('Insert')
         insert_menu.addAction(insert_image_act)
 
+        keywords_menu = self.menubar.addMenu('Keywords')
+        keywords_menu.addAction(generate_act)
+        keywords_menu.addSeparator()
+        keywords_menu.addActions([clear_added_keys_act, clear_gen_keys_act, clear_all_keys_act])
+
     def __init_toolbar(self):
 
         font_bar = QToolBar()
 
         self.size_spin = QSpinBox()
-        self.size_spin.setValue(DEFAULT_FONT.pointSize())
-        set_font_size = lambda: self.last_text.setFontPointSize(self.size_spin.value())
-        self.size_spin.valueChanged.connect(set_font_size)
+        self.size_spin.setValue(MainWindow.DEFAULT_FONT.pointSize())
+        self.size_spin.valueChanged.connect(lambda: self.last_text.setFontPointSize(self.size_spin.value()))
 
         self.font_combo = QFontComboBox()
-        self.font_combo.setCurrentFont(DEFAULT_FONT)
-        set_font_family = lambda: self.last_text.setFontFamily(self.font_combo.currentFont().family())
-        self.font_combo.currentFontChanged.connect(set_font_family)
+        self.font_combo.setCurrentFont(MainWindow.DEFAULT_FONT)
+        self.font_combo.currentFontChanged.connect(
+            lambda: self.last_text.setFontFamily(self.font_combo.currentFont().family()))
 
         font_bar.addWidget(self.size_spin)
         font_bar.addWidget(self.font_combo)
@@ -128,8 +156,6 @@ class Window(QMainWindow):
 
         triple_buttons_bar = QToolBar()
         triple_buttons_bar.addActions([self.bold_act, self.italic_act, self.underline_act])
-
-
 
         self.main_toolbar.addWidget(font_bar)
         self.main_toolbar.addWidget(alignment_bar)
@@ -171,10 +197,10 @@ class Window(QMainWindow):
         Cette méthode établit les propriétés des widgets de bienvenue.
         """
         self.username_input.setPlaceholderText('Username')
-        self.username_input.setFont(DEFAULT_FONT)
+        self.username_input.setFont(MainWindow.DEFAULT_FONT)
         self.username_input.setMaximumWidth(400)
         self.password_input.setPlaceholderText('Password')
-        self.password_input.setFont(DEFAULT_FONT)
+        self.password_input.setFont(MainWindow.DEFAULT_FONT)
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
         self.password_input.setMaximumWidth(400)
 
@@ -228,21 +254,21 @@ class Window(QMainWindow):
         """
         Initialise les propriétés des widgets de notes
         """
-        self.notes_text.document().setDefaultFont(DEFAULT_FONT)
-        self.headLines_text.document().setDefaultFont(DEFAULT_FONT)
-        self.keywords_text.document().setDefaultFont(DEFAULT_FONT)
-        self.summery_text.document().setDefaultFont(DEFAULT_FONT)
+        self.notes_text.document().setDefaultFont(MainWindow.DEFAULT_FONT)
+        self.headLines_text.document().setDefaultFont(MainWindow.DEFAULT_FONT)
+        self.keywords_text.document().setDefaultFont(MainWindow.DEFAULT_FONT)
+        self.summery_text.document().setDefaultFont(MainWindow.DEFAULT_FONT)
 
         self.headLines_text.setPlaceholderText('Write your headlines here...')
         self.notes_text.setPlaceholderText('Write your notes here...')
         self.summery_text.setPlaceholderText('Write your summery here...')
-        self.keywords_text.setPlaceholderText('Click on generate to generate your keywords')
 
         self.headLines_text.setMaximumHeight(100)
         self.summery_text.setMaximumHeight(150)
 
         self.headLines_text.setAcceptDrops(False)
         self.summery_text.setAcceptDrops(False)
+        self.keywords_text.setAcceptDrops(False)
 
         self.keywords_text.setReadOnly(True)
         self.headLines_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -267,10 +293,12 @@ class Window(QMainWindow):
 
     def show_notes_page(self):
         self.menubar.setVisible(True)
+        self.main_toolbar.setVisible(True)
         self.widgets_lst.setCurrentWidget(self.notes_widget)
 
     def show_welcome_page(self):
         self.menubar.setVisible(False)
+        self.main_toolbar.setVisible(False)
         self.widgets_lst.setCurrentWidget(self.welcome_widget)
 
     def enter_login(self, event):
@@ -295,11 +323,12 @@ class Window(QMainWindow):
         if self.all_keys is None:
             return
 
+        self.all_keys.sort(key=dm.Idea.get_line)
         self.keywords_text.clear()
 
         for i, key in enumerate(self.all_keys):
 
-            self.keywords_text.setCurrentFont(DEFAULT_FONT)
+            self.keywords_text.setCurrentFont(MainWindow.DEFAULT_FONT)
             self.keywords_text.insertPlainText(str(key))
 
             if i < len(self.all_keys) - 1:
@@ -338,8 +367,11 @@ class Window(QMainWindow):
             QTextEdit.mousePressEvent(text, event)
 
     def insert_image(self):
-        dialog = QFileDialog.getOpenFileName(self, 'Choose image', '', 'Image files (*.jpg *.git)')
+        home = os.path.join(os.environ['HOMEPATH'])
+        fil = 'Image files (*.jpg *.git)'
+        dialog = QFileDialog.getOpenFileName(parent=self, caption='Choose image', directory=home, filter=fil)
         path = dialog[0]
+
         image = QImage(path)
         self.images.append(image)
         self.notes_text.textCursor().insertImage(image)
@@ -360,6 +392,65 @@ class Window(QMainWindow):
         pos = self.notes_text.verticalScrollBar().sliderPosition()
         self.keywords_text.verticalScrollBar().setSliderPosition(pos)
 
+    def clear_keys(self, keys):
+        keys.clear()
+        if keys == self.generated_keys:
+            self.all_keys = self.added_keys
+            self.generate_empty()
+        elif keys == self.added_keys:
+            self.all_keys = self.generated_keys
+        else:
+            self.generated_keys.clear()
+            self.added_keys.clear()
+
+        self.write_keys()
+
+    def highlight_phrase(self, phrase, line):
+
+        cursor = self.notes_text.textCursor()
+        fonts.move_cursor_to_line(cursor, line)
+        cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock)
+        last_pos = cursor.position()
+
+        cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
+        while phrase not in cursor.selectedText():  # Avancer le curseur vers le début de la phrase
+            cursor.setPosition(last_pos)
+            cursor.movePosition(QTextCursor.MoveOperation.NextCharacter)
+            last_pos = cursor.position()
+            cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
+
+        cursor.clearSelection()
+        cursor.movePosition(QTextCursor.MoveOperation.NextCharacter, QTextCursor.MoveMode.KeepAnchor)
+        while phrase not in cursor.selectedText():  # Reculer le curseur vers la fin de la phrase
+            cursor.movePosition(QTextCursor.MoveOperation.NextCharacter, QTextCursor.MoveMode.KeepAnchor)
+
+        self.notes_text.setTextBackgroundColor(QColorConstants.Yellow)
+        cursor.clearSelection()
+
+    def keywords_text_mouse_event(self, event):
+
+        QTextEdit.mousePressEvent(self.keywords_text, event)
+        if len(self.all_keys) == 0:
+            return
+
+        keys_cursor = self.keywords_text.cursorForPosition(event.pos())
+        keys_cursor.movePosition(QTextCursor.MoveOperation.WordLeft)
+        keys_cursor.movePosition(QTextCursor.MoveOperation.NextWord, QTextCursor.MoveMode.KeepAnchor)
+        keyword = keys_cursor.selectedText().strip()
+        self.keywords_text.setTextColor(QColorConstants.Yellow)
+        line = keys_cursor.blockNumber()
+
+        for idea in self.all_keys:
+            if idea.line < line:
+                continue
+            elif idea.line == line:
+                if keyword in idea.keywords:
+                    phrase = idea.phrase
+                    self.highlight_phrase(phrase, line)
+                    break
+
+        keys_cursor.clearSelection()
+
     def launch(self):
         """
         Lance le programme !
@@ -370,12 +461,21 @@ class Window(QMainWindow):
     # À ajouter à la classe Note :
 
     def add_keyword(self, new_key):
+        """
+        Cette fonction ajoute un
+        :param new_key:
+        """
 
         self.keyword_line.clear()
-
-        phrase = self.notes_text.textCursor().selectedText()
-        line = self.notes_text.textCursor().blockNumber()
         cursor = self.notes_text.textCursor()
+
+        if cursor.hasSelection():
+            phrase = cursor.selectedText()
+            cursor.clearSelection()
+        else:
+            phrase = cursor.block().text()
+
+        line = cursor.blockNumber()
         cursor.setPosition(cursor.selectionStart())
         font = fonts.get_max_font_by_line(self.notes_text, line, True)
         new_idea = dm.Idea(phrase, line, font, new_key)
@@ -384,10 +484,13 @@ class Window(QMainWindow):
         self.added_keys.sort(key=dm.Idea.get_line)
         self.generate_empty()
         self.all_keys.append(new_idea)
-        self.all_keys.sort(key=dm.Idea.get_line)
         self.write_keys()
 
     def generate(self):
+        """
+        Cette fonction génère les mots-clés du text (ou de la partie sélectionnée du text). La fonction met à jour
+        la liste des idées générée self.generated_keys.
+        """
         cursor = self.notes_text.textCursor()
         text = cursor.selectedText()
         from_to = None
@@ -400,14 +503,18 @@ class Window(QMainWindow):
             from_to = (start, end)
             self.generate_empty()
 
-        dm.get_ideas(text, fonts.get_max_fonts(self.notes_text), self.genrated_keys, from_to)
-        self.genrated_keys.sort(key=dm.Idea.get_line)
-        self.all_keys = self.added_keys + self.genrated_keys
-        self.all_keys.sort(key=dm.Idea.get_line)
+        dm.get_ideas(text, fonts.get_max_fonts(self.notes_text), self.generated_keys, from_to)
+        self.generated_keys.sort(key=dm.Idea.get_line)
+        self.all_keys = self.added_keys + self.generated_keys
         self.write_keys()
-        self.move_keys_bar()
+
+        self.move_keys_bar()  # Afin d'aligner les mots-clés sur les notes
 
     def generate_empty(self):
+        """
+        Cette fonction parcour toutes les idées générées automatiquement. Si une ligne ne contient pas d'idée,
+        la fonction ajoute une idée vide (sans mots-clés) à cette ligne.
+        """
         doc = self.notes_text.document()
         i = 0
         nb_lines = doc.blockCount()
@@ -417,16 +524,16 @@ class Window(QMainWindow):
             font = fonts.get_max_font_by_line(self.notes_text, line, False)
             idea = dm.Idea(phrase, line, font)
 
-            if len(self.genrated_keys) >= i:  # Si on se rend à la dernière idée, ajouter une idée
-                self.genrated_keys.insert(line, idea)
+            if len(self.generated_keys) >= i:  # Si on se rend à la dernière idée, ajouter une idée
+                self.generated_keys.insert(line, idea)
+                self.all_keys.append(idea)
+                i += 1
+
+            elif self.generated_keys[i].line < line:  # Si l'idée i n'est pas n'est pas dans la line, ajouter idée vide.
+                self.generated_keys.insert(line, idea)
                 self.all_keys.append(idea)
                 i += 1
 
             else:  # Si on n'est à la dernière idée mais qu'on est pas dans la même ligne, passer à la prochaine idée.
-                while self.genrated_keys[i].line <= line:
+                while self.generated_keys[i].line <= line:
                     i += 1
-
-            if self.genrated_keys[i].line != line:  # Si l'idée i n'est pas n'est pas dans la line, ajouter idée vide.
-                self.genrated_keys.insert(line, idea)
-                self.all_keys.append(idea)
-                i += 1
