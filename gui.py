@@ -286,7 +286,7 @@ class Window(QMainWindow):
         notes.notes.notessaves(maintext, sumtext, headtext)
 
     def load(self):
-        notes.notes.notesload()
+        notes.notes.notesload(self.notes_text)
 
     def write_keys(self):
         """
