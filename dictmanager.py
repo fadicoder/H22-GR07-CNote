@@ -1,8 +1,8 @@
-from sortedcontainers import sorteddict
+from sortedcontainers import SortedDict
 import threading
 
 DICT_PATH = r'dictionary.txt'
-USAGE_DICT = sorteddict.SortedDict()
+USAGE_DICT = SortedDict()
 
 
 def open_dict():
@@ -16,7 +16,7 @@ def open_dict():
             USAGE_DICT[word_info[0]] = int(word_info[1])
 
 
-# Opening the dictionary with a seperated thread:
+# Opening the dictionary in a seperated thread:
 dict_thread = threading.Thread(target=open_dict)
 dict_thread.start()
 
@@ -43,6 +43,9 @@ class Idea:
         if self.is_empty():
             return ''
         return ' '.join(self.keywords)
+
+    def phrase_include_idea(self, phrase):
+        return self.phrase in phrase
 
     def is_empty(self):
         return len(self.keywords) == 0
@@ -83,7 +86,7 @@ def is_key(word):
     if word == '' or word == ' ':
         return False
 
-    dict_thread.join()  # at this point, the dictionary should be completed.
+    dict_thread.join()  # À ce point, le dictionnaire doit être complété
 
     pos = USAGE_DICT.bisect(word) - 1
 
@@ -100,20 +103,24 @@ def get_ideas(text, max_fonts: list, ideas: list, from_to: tuple):
     """
     Cette fonction analyse un text en déduisant ses mots clés. Chaque ligne est considérée comme une phrase.
     Chaque phrase sera associée à une liste de mots clés dans un objet Idea.
-    Remarque : La liste de mots clé d'une idée pourrait être nulle.
+    Remarque : La liste de mots clé d'une idée pourrait être nulle.
     La fonction met à jour la liste des idées donnée en paramètre en y inscrivant les idées déduites du text entre
     les lignes indiquées par le tuple from_to.
-    :param text: le text à analyser.
-    :param max_fonts: les plus grands fonts des lignes à analyser.
-    :param ideas list des idées à mettre à jour.
-    :param from_to: indique la ligne de départ et la ligne de fin.
+    :param text : le text à analyser.
+    :param max_fonts : les plus grands fonts des lignes à analyser.
+    :param ideas : list des idées à mettre à jour.
+    :param from_to : indique la ligne de départ et la ligne de fin.
     """
 
-    delete_old_ideas(ideas, from_to)
+    start = 0
+    if from_to is not None:
+        start = from_to[0]
+
+    delete_old_ideas(ideas, from_to, text)
     words = words_matrix(text)
 
     for i, phrase in enumerate(words):
-        idea = Idea(' '.join(phrase), i, max_fonts[i])
+        idea = Idea(' '.join(phrase), i+start, max_fonts[i])
 
         for word in phrase:
 
@@ -123,26 +130,25 @@ def get_ideas(text, max_fonts: list, ideas: list, from_to: tuple):
         ideas.append(idea)
 
 
-def delete_old_ideas(ideas: list, from_to: tuple = None):
+def delete_old_ideas(ideas: list, from_to: tuple, text: str):
+
     if from_to is None:
         ideas.clear()
         return
 
     start = from_to[0]
     end = from_to[1]
+    ideas_to_remove = []
+    phrases = text.split('\n')
 
-    for idea in ideas:
-        if end <= idea.line >= start:
-            ideas.remove(idea)
+    for i, idea in enumerate(ideas):
+        if start <= idea.line <= end:
+            if idea.phrase_include_idea(phrases[idea.line - start]):
+                ideas_to_remove.append(idea)
 
+    for idea in ideas_to_remove:
+        ideas.remove(idea)
 
-def add_idea_to_list(idea, line, ideas: list):
-    i = line
-    if len(ideas) < i:
-        while ideas[i].line < line:
-            i += 1
-        if ideas[i].line == line:
-            ideas[i] = idea
-        return
-
-    ideas.insert(i, idea)
+    '''
+    accepted_ideas = [idea for idea in ideas if idea.line < start or idea.line > end]
+    '''

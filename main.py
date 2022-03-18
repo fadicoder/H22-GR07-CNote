@@ -1,7 +1,8 @@
-from gui import MainWindow
+from mainwindow import MainWindow
 
-
-if __name__ == '__main__':
+window = MainWindow()
+window.launch()
+if __name__ == '__maain__':
 
     window = MainWindow()
     window.launch()

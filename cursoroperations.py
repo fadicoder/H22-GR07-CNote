@@ -14,26 +14,44 @@ def move_cursor_to_line(cursor: QTextCursor, line: int):
         cursor.movePosition(QTextCursor.MoveOperation.PreviousBlock)
 
 
-def get_max_font_by_line(text, i: int, cursor_on_line: bool):
+def get_start_of_phrase(cursor: QTextCursor, phrase: str, start_line: int):
+    move_cursor_to_line(cursor, start_line)
+
+    start_pos = cursor.position()
+
+    cursor.movePosition(QTextCursor.MoveOperation.NextCharacter, QTextCursor.MoveMode.KeepAnchor, len(phrase))
+
+    while phrase not in cursor.selection().toPlainText():
+        cursor.clearSelection()
+        start_pos += 1  # avancer d'une position
+        cursor.setPosition(start_pos)
+        cursor.movePosition(QTextCursor.MoveOperation.NextCharacter, QTextCursor.MoveMode.KeepAnchor, len(phrase))
+
+    print(start_pos)
+    return start_pos
+
+
+def get_max_font_by_line(text, cursor, i: int, cursor_on_line: bool):
     """
     Cette fonction calcule le plus grand font de la ligne i donnée en paramètre et le retourne.
     Si le curseur n'est pas nécessairement sur la ligne à analyser, la fonction déplace celui-ci vers la ligne voulue.
-    :param text : le widget du text à analyser
-    :param i : numéro de la ligne à analyser
-    :param cursor_on_line : un boolean qui indique si le curseur est nécessairement sur la ligne à analyser
-    :return : le plus grand font de la ligne i
+    :param text : le widget du text à analyser.
+    :param cursor: Le curseur qui sera déplacer entre les caractère pour déterminer la plus grande fonte.
+    :param i : numéro de la ligne à analyser.
+    :param cursor_on_line : un boolean qui indique si le curseur est nécessairement sur la ligne à analyser.
+    :return : le plus grand font de la ligne i.
     """
 
     if not cursor_on_line:
         move_cursor_to_line(text.textCursor(), i)
 
-    text.moveCursor(QTextCursor.MoveOperation.StartOfBlock)
+    cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock)
     document = text.document()
     max_font = text.currentFont()
 
     for j in range(document.findBlockByLineNumber(i).length() - 1):
 
-        text.moveCursor(QTextCursor.MoveOperation.NextCharacter)
+        cursor.movePosition(QTextCursor.MoveOperation.NextCharacter)
         current_font = text.currentFont()
         if current_font > max_font:
             max_font = current_font
@@ -41,20 +59,34 @@ def get_max_font_by_line(text, i: int, cursor_on_line: bool):
     return max_font
 
 
-def get_max_fonts(text):
+def get_max_fonts(text, from_to):
     """
     Cette fonction calcule la plus grande police de caractère d'une ligne et la retourne.
     :param text : le widget du text à analyser.
+    :param from_to : Un tuple qui contient les numéros des deux lignes qui limites les lignes ou il faudrait calculer
+    la plus grande fonte.
     :return Une liste des plus grandes police de caractère de chaque ligne.
     """
 
     doc = text.document()
-    text.moveCursor(QTextCursor.MoveOperation.Start)
+    cursor = text.textCursor()
     max_fonts = []
+    start = 0
+    end = doc.blockCount()
 
-    for i in range(doc.blockCount()):
-        max_fonts.append(get_max_font_by_line(text, i, True))
-        text.moveCursor(QTextCursor.MoveOperation.NextBlock)
+    if from_to is None:
+        cursor.movePosition(QTextCursor.MoveOperation.Start)
+
+    else:
+        start = from_to[0]
+        end = from_to[1]
+        move_cursor_to_line(cursor, start)
+        cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock)
+
+    for i in range(start, end+1):
+        max_fonts.append(get_max_font_by_line(text, cursor, i, True))
+        cursor.movePosition(QTextCursor.MoveOperation.NextBlock)
+
 
     return max_fonts
 
@@ -69,7 +101,7 @@ def adjust_idea_fonts(text, all_keys: list):
     :param all_keys : liste de toutes les idées à vérifier
     """
 
-    max_fonts = get_max_fonts(text)
+    max_fonts = get_max_fonts(text, None)
 
     for i, idea in enumerate(all_keys):
         idea.max_font = max_fonts[idea.line]
