@@ -306,14 +306,28 @@ class MainWindow(QMainWindow):
             self.show_notes_page()
 
     def save(self):
-
+        """
+        Cette fonction sauvegarde le document
+        """
         sumtext = self.summery_text.toHtml()
         headtext = self.headLines_text.toHtml()
         maintext = self.notes_text.toHtml()
-        notes.notes.notessaves(maintext, sumtext, headtext)
+        genekeys= self.generated_keys
+        adkeys=self.added_keys
+        notes.notes.notessaves(maintext, sumtext, headtext,genekeys,adkeys)
 
     def load(self):
-        notes.notes.notesload(self.notes_text)
+        """
+        Cette fonction charge le document
+        """
+        txtsl =notes.notes.notesload()
+        attributes_list = txtsl.split('@&%*')
+        self.summery_text.setHtml(attributes_list[1])
+        self.headLines_text.setHtml(attributes_list[2])
+        self.notes_text.setHtml(attributes_list[0])
+
+        self.generated_keys = attributes_list[3].split(' ')
+        self.added_keys = attributes_list[4].split(' ')
 
     def write_keys(self):
         """

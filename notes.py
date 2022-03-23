@@ -2,14 +2,21 @@ import pickle
 
 class notes:
     @staticmethod
-    def notessaves(maintxt,sumtxt,headtxt): #sauvegarde le document
-        txtsl=maintxt+sumtxt+headtxt#mets ensemble le tout pour optimiser la sauvegarde
+    def notessaves(maintxt,sumtxt,headtxt,genekeys,adkeys): #sauvegarde le document
+        strgene = ""
+
+        for element in genekeys :
+            strgene += str(element)
+        strad = ""
+
+        for element in adkeys :
+            strad += str(element)
+
+        txtsl=maintxt+'@&%*'+sumtxt+'@&%*'+headtxt+'@&%*'+strgene+'@&%*'+strad#mets ensemble le tout pour optimiser la sauvegarde
         #print(txtsl) #prinnt pour vérifier que ca fonctionne
         pickle.dump(txtsl, open("savetest.bin", "wb")) #sauvegarde le document
     @staticmethod
-    def notesload(maintext):
+    def notesload():
         txtsl='hey'
-        txtsl = pickle.load(open(r"sample.bin", "rb"))
-        maintext.setHtml(txtsl)
-        print(maintext.toHtml)
-        return
+        txtsl = pickle.load(open(r"savetest.bin", "rb"))
+        return txtsl
