@@ -1,5 +1,5 @@
 import dictmanager as dm
-import cursoroperations as co
+from gui import cursoroperations as co
 import notes
 import os
 import sys
@@ -21,6 +21,7 @@ from PyQt6.QtGui import *
 
 
 class MainWindow(QMainWindow):
+
     DEFAULT_FONT = QFont('Calibri', 15)
 
     def __init__(self):
@@ -112,8 +113,6 @@ class MainWindow(QMainWindow):
 
     def __init_toolbar(self):
 
-        font_bar = QToolBar()
-
         self.size_spin = QSpinBox()
         self.size_spin.setValue(MainWindow.DEFAULT_FONT.pointSize())
         self.size_spin.valueChanged.connect(lambda: self.last_text.setFontPointSize(self.size_spin.value()))
@@ -129,9 +128,6 @@ class MainWindow(QMainWindow):
         align_left_act.triggered.connect(lambda: self.last_text.setAlignment(Qt.AlignmentFlag.AlignLeft))
         align_center_act.triggered.connect(lambda: self.last_text.setAlignment(Qt.AlignmentFlag.AlignCenter))
         align_right_act.triggered.connect(lambda: self.last_text.setAlignment(Qt.AlignmentFlag.AlignRight))
-
-        alignment_bar = QToolBar()
-        alignment_bar.addActions([align_left_act, align_center_act, align_right_act])
 
         self.bold_act = QAction(QIcon('resources/Bold.png'), 'Bold text', self)
         self.italic_act = QAction(QIcon('resources/Italic.png'), 'Italic text', self)
@@ -150,15 +146,19 @@ class MainWindow(QMainWindow):
         self.italic_act.triggered.connect(lambda checked: self.last_text.setFontItalic(checked))
         self.underline_act.triggered.connect(lambda checked: self.last_text.setFontUnderline(checked))
 
-        triple_buttons_bar = QToolBar()
-        triple_buttons_bar.addActions([self.bold_act, self.italic_act, self.underline_act])
-
         self.main_toolbar.addWidget(self.font_combo)
         self.main_toolbar.addWidget(self.size_spin)
         self.main_toolbar.addSeparator()
         self.main_toolbar.addActions([align_left_act, align_center_act, align_right_act])
         self.main_toolbar.addSeparator()
         self.main_toolbar.addActions([self.bold_act, self.italic_act, self.underline_act])
+
+        hi_act = QAction(QIcon('resources/Italic.png'), 'Highlight', self)
+        hi_act.triggered.connect(
+            lambda: self.notes_text.setTextBackgroundColor(QColorConstants.Yellow))
+        self.main_toolbar.addAction(hi_act)
+
+        # self.notes_highlighter.highlightBlock(self.notes_text.textCursor().selection().toPlainText()))
 
     def __welcome_widget(self):
         """
@@ -209,7 +209,7 @@ class MainWindow(QMainWindow):
         :return : Widget de note
         """
 
-        notes_widget = QTabWidget()
+        notes_widget = QWidget()
         keywords_widget = QWidget(self)
         root = QVBoxLayout()
         notes_widget.setLayout(root)
@@ -269,7 +269,7 @@ class MainWindow(QMainWindow):
         self.summery_text.setAcceptDrops(False)
         self.keywords_text.setAcceptDrops(False)
 
-        self.keywords_text.setReadOnly(True)
+        # self.keywords_text.setReadOnly(True)
         self.headLines_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.notes_text.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
         self.keywords_text.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
@@ -287,6 +287,7 @@ class MainWindow(QMainWindow):
         self.summery_text.mousePressEvent = lambda event: self.update_cursor_infos(self.summery_text, event)
         self.notes_text.mousePressEvent = lambda event: self.update_cursor_infos(self.notes_text, event)
         self.headLines_text.mousePressEvent = lambda event: self.update_cursor_infos(self.headLines_text, event)
+        self.keywords_text.mousePressEvent = self.keywords_text_mouse_event
 
     # Les méthodes suivantes sont appelées lors des événements :
 
@@ -414,12 +415,14 @@ class MainWindow(QMainWindow):
 
         cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
         while phrase not in cursor.selectedText():  # Avancer le curseur vers le début de la phrase
+            cursor.clearSelection()
             cursor.setPosition(last_pos)
             cursor.movePosition(QTextCursor.MoveOperation.NextCharacter)
             last_pos = cursor.position()
             cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
 
         cursor.clearSelection()
+        cursor.setPosition(last_pos)
         cursor.movePosition(QTextCursor.MoveOperation.NextCharacter, QTextCursor.MoveMode.KeepAnchor)
         while phrase not in cursor.selectedText():  # Reculer le curseur vers la fin de la phrase
             cursor.movePosition(QTextCursor.MoveOperation.NextCharacter, QTextCursor.MoveMode.KeepAnchor)
@@ -437,9 +440,10 @@ class MainWindow(QMainWindow):
         keys_cursor.movePosition(QTextCursor.MoveOperation.WordLeft)
         keys_cursor.movePosition(QTextCursor.MoveOperation.NextWord, QTextCursor.MoveMode.KeepAnchor)
         keyword = keys_cursor.selectedText().strip()
-        self.keywords_text.setTextColor(QColorConstants.Yellow)
-        line = keys_cursor.blockNumber()
+        self.keywords_text.setTextBackgroundColor(QColorConstants.Yellow)
 
+        line = keys_cursor.blockNumber()
+        print(keyword)
         for idea in self.all_keys:
             if idea.line < line:
                 continue
@@ -449,17 +453,17 @@ class MainWindow(QMainWindow):
                     self.highlight_phrase(phrase, line)
                     break
 
-        keys_cursor.clearSelection()
-
     def clear_gen_keys(self):
         self.generated_keys.clear()
-        self.all_keys = self.added_keys
+        self.all_keys.clear()
+        self.all_keys.extend(self.added_keys)
         self.generate_empty()
         self.write_keys()
 
     def clear_added_keys(self):
         self.added_keys.clear()
-        self.all_keys = self.generated_keys
+        self.all_keys.clear()
+        self.all_keys.extend(self.generated_keys)
         self.write_keys()
 
     def clear_all_keys(self):

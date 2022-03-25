@@ -15,6 +15,11 @@ def move_cursor_to_line(cursor: QTextCursor, line: int):
 
 
 def get_start_of_phrase(cursor: QTextCursor, phrase: str, start_line: int):
+
+    if cursor.document().blockCount() - 1 < start_line:
+        return
+
+
     move_cursor_to_line(cursor, start_line)
 
     start_pos = cursor.position()
