@@ -445,7 +445,7 @@ class MainWindow(QMainWindow):
         self.keywords_text.setTextBackgroundColor(QColorConstants.Yellow)
 
         line = keys_cursor.blockNumber()
-        print(keyword)
+
         for idea in self.all_keys:
             if idea.line < line:
                 continue
@@ -511,9 +511,6 @@ class MainWindow(QMainWindow):
         self.added_keys.append(new_idea)
         self.added_keys.sort(key=dm.Idea.get_line)
         self.generate_empty()
-        for idea in self.generated_keys:
-            print(len(idea.keywords))
-
         self.all_keys.append(new_idea)
         self.write_keys()
 
@@ -524,7 +521,6 @@ class MainWindow(QMainWindow):
         """
         cursor = self.notes_text.textCursor()
         text = cursor.selection().toPlainText()
-        print(text)
         from_to = None
         if text == '':
             text = self.notes_text.toPlainText()
