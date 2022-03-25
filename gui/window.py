@@ -440,6 +440,8 @@ class MainWindow(QMainWindow):
         keys_cursor.movePosition(QTextCursor.MoveOperation.WordLeft)
         keys_cursor.movePosition(QTextCursor.MoveOperation.NextWord, QTextCursor.MoveMode.KeepAnchor)
         keyword = keys_cursor.selectedText().strip()
+        self.notes_text.moveCursor(QTextCursor.MoveOperation.NextWord, QTextCursor.MoveMode.KeepAnchor)
+        self.notes_text.setTextBackgroundColor(QColorConstants.Yellow)
         self.keywords_text.setTextBackgroundColor(QColorConstants.Yellow)
 
         line = keys_cursor.blockNumber()
@@ -509,6 +511,9 @@ class MainWindow(QMainWindow):
         self.added_keys.append(new_idea)
         self.added_keys.sort(key=dm.Idea.get_line)
         self.generate_empty()
+        for idea in self.generated_keys:
+            print(len(idea.keywords))
+
         self.all_keys.append(new_idea)
         self.write_keys()
 
@@ -553,7 +558,7 @@ class MainWindow(QMainWindow):
             font = co.get_max_font_by_line(self.notes_text, self.notes_text.textCursor(), line, False)
             idea = dm.Idea(phrase, line, font)
 
-            if len(self.generated_keys) >= i:  # Si on se rend à la dernière idée, ajouter une idée
+            if len(self.generated_keys) <= i:  # Si on se rend à la dernière idée, ajouter une idée
                 self.generated_keys.insert(line, idea)
                 self.all_keys.append(idea)
                 i += 1
@@ -566,3 +571,5 @@ class MainWindow(QMainWindow):
             else:  # Si on n'est à la dernière idée mais qu'on est pas dans la même ligne, passer à la prochaine idée.
                 while self.generated_keys[i].line <= line:
                     i += 1
+                    if len(self.generated_keys) >= i:
+                        break
