@@ -326,9 +326,20 @@ class MainWindow(QMainWindow):
         self.summery_text.setHtml(attributes_list[1])
         self.headLines_text.setHtml(attributes_list[2])
         self.notes_text.setHtml(attributes_list[0])
-
-        self.generated_keys = attributes_list[3].split(' ')
-        self.added_keys = attributes_list[4].split(' ')
+        self.generated_keys.clear()
+        self.added_keys.clear()
+        self.all_keys = self.generated_keys + self.added_keys
+        restorelistgene = attributes_list[3].split("@$?&")
+        for restoregene in restorelistgene:
+            idea = restoregene.split("@&&%*****")
+            keywords=idea[3].split(' ')
+            self.generated_keys.append(idea[0], int(idea[1]),idea[2],keywords)
+        restorelistad=attributes_list[4].split("@$?&")
+        for restoread in restorelistad:
+            idea = restoread.split("@&&%*****")
+            keywords = idea[3].split(' ')
+            self.generated_keys.append(idea[0], int(idea[1]), idea[2], keywords)
+        self.all_keys = self.generated_keys + self.added_keys
 
     def write_keys(self):
         """

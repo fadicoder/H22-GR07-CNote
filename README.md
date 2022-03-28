@@ -4,4 +4,4 @@ https://fr.m.wikipedia.org/wiki/PyQt
 
 phrase test:
 
-Je fais une phrase. Voici la deux. Et ceci est la trois
+Je fais une phrase Voici la deux. Et ceci est la trois
