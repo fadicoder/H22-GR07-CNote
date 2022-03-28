@@ -1,5 +1,6 @@
 from sortedcontainers import SortedDict
 import threading
+import re
 
 DICT_PATH = r'dictionary.txt'
 USAGE_DICT = SortedDict()
@@ -72,7 +73,7 @@ def words_matrix(text):
     words = []
 
     for phrase in phrases:
-        words.append(phrase.split(' '))
+        words.append(re.split('[ \n\\W\\d]+', phrase))
 
     return words
 
@@ -123,7 +124,7 @@ def get_ideas(text, max_fonts: list, ideas: list, from_to: tuple):
     words = words_matrix(text)
 
     for i, phrase in enumerate(words):
-        idea = Idea(' '.join(phrase), i+start, max_fonts[i])
+        idea = Idea(' '.join(phrase), i + start, max_fonts[i])
 
         for word in phrase:
 
@@ -134,7 +135,6 @@ def get_ideas(text, max_fonts: list, ideas: list, from_to: tuple):
 
 
 def delete_old_ideas(ideas: list, from_to: tuple, text: str):
-
     if from_to is None:
         ideas.clear()
         return
