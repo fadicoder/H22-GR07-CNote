@@ -63,6 +63,11 @@ class MainWindow(QMainWindow):
         save_act.setStatusTip('Saving...')
         save_act.triggered.connect(self.save)
 
+        save_as_act = QAction('Save as', self)
+        save_as_act.setShortcut('Ctrl+Shift+S')
+        save_as_act.setStatusTip('Saving...')
+        save_as_act.triggered.connect(self.save_as)
+
         load_act = QAction('Load', self)
         load_act.setShortcut('Ctrl+L')
         load_act.triggered.connect(self.load)
@@ -96,6 +101,7 @@ class MainWindow(QMainWindow):
 
         account_menu = self.menubar.addMenu('Account')
         account_menu.addAction(save_act)
+        account_menu.addAction(save_as_act)
         account_menu.addAction(load_act)
         account_menu.addSeparator()
         account_menu.addAction(sign_out_act)
@@ -306,40 +312,48 @@ class MainWindow(QMainWindow):
         if event.key() == Qt.Key.Key_Enter:
             self.show_notes_page()
 
-    def save(self):
+    def save_as(self):
+
+
+        self.save(1)
+
+    def save(self,saveas):
         """
         Cette fonction sauvegarde le document
         """
+        if saveas != 1:
+            saveas=0
         sumtext = self.summery_text.toHtml()
         headtext = self.headLines_text.toHtml()
         maintext = self.notes_text.toHtml()
         genekeys= self.generated_keys
         adkeys=self.added_keys
-        notes.notes.notessaves(maintext, sumtext, headtext,genekeys,adkeys)
+        notes.notes.notessaves(maintext, sumtext, headtext,genekeys,adkeys,saveas)
 
     def load(self):
         """
         Cette fonction charge le document
         """
         txtsl =notes.notes.notesload()
-        attributes_list = txtsl.split('@&%*')
-        self.summery_text.setHtml(attributes_list[1])
-        self.headLines_text.setHtml(attributes_list[2])
-        self.notes_text.setHtml(attributes_list[0])
-        self.generated_keys.clear()
-        self.added_keys.clear()
-        self.all_keys = self.generated_keys + self.added_keys
-        restorelistgene = attributes_list[3].split("@$?&")
-        for restoregene in restorelistgene:
-            idea = restoregene.split("@&&%*****")
-            keywords=idea[3].split(' ')
-            self.generated_keys.append(idea[0], int(idea[1]),idea[2],keywords)
-        restorelistad=attributes_list[4].split("@$?&")
-        for restoread in restorelistad:
-            idea = restoread.split("@&&%*****")
-            keywords = idea[3].split(' ')
-            self.generated_keys.append(idea[0], int(idea[1]), idea[2], keywords)
-        self.all_keys = self.generated_keys + self.added_keys
+        if txtsl!=None:
+            attributes_list = txtsl.split('@&%*')
+            self.summery_text.setHtml(attributes_list[1])
+            self.headLines_text.setHtml(attributes_list[2])
+            self.notes_text.setHtml(attributes_list[0])
+            self.generated_keys.clear()
+            self.added_keys.clear()
+            self.all_keys = self.generated_keys + self.added_keys
+            restorelistgene = attributes_list[3].split("@$?&")
+            for restoregene in restorelistgene:
+                idea = restoregene.split("@&&%*****")
+                keywords=idea[3].split(' ')
+                self.generated_keys.append(idea[0], int(idea[1]),idea[2],keywords)
+            restorelistad=attributes_list[4].split("@$?&")
+            for restoread in restorelistad:
+                idea = restoread.split("@&&%*****")
+                keywords = idea[3].split(' ')
+                self.generated_keys.append(idea[0], int(idea[1]), idea[2], keywords)
+            self.all_keys = self.generated_keys + self.added_keys
 
     def write_keys(self):
         """
