@@ -51,8 +51,8 @@ class notes:
     def notesload():
 
         filetoopen=easygui.fileopenbox()
+        notes.fileopenned = filetoopen
         if notes.fileopenned != None:
-            notes.fileopenned=filetoopen
             notes.openedfilebefore=True
             txtsl = pickle.load(open(notes.fileopenned, "rb"))
             return txtsl
