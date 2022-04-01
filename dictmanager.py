@@ -73,7 +73,7 @@ def words_matrix(text):
     words = []
 
     for phrase in phrases:
-        words.append(re.split('[ \n\\W\\d]+', phrase))
+        words.append(re.split('[ \\W\\d]+', phrase))
 
     return words
 

@@ -1,6 +1,7 @@
 import dictmanager as dm
 from gui import cursoroperations as co
 import notes
+from gui import highlighting
 import os
 import sys
 
@@ -275,7 +276,7 @@ class MainWindow(QMainWindow):
         self.summery_text.setAcceptDrops(False)
         self.keywords_text.setAcceptDrops(False)
 
-        # self.keywords_text.setReadOnly(True)
+        self.keywords_text.setReadOnly(True)
         self.headLines_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.notes_text.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
         self.keywords_text.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
@@ -293,7 +294,8 @@ class MainWindow(QMainWindow):
         self.summery_text.mousePressEvent = lambda event: self.update_cursor_infos(self.summery_text, event)
         self.notes_text.mousePressEvent = lambda event: self.update_cursor_infos(self.notes_text, event)
         self.headLines_text.mousePressEvent = lambda event: self.update_cursor_infos(self.headLines_text, event)
-        self.keywords_text.mousePressEvent = self.keywords_text_mouse_event
+        self.keywords_text.mousePressEvent = self.keywords_text_mouse_clic_event
+        self.keywords_text.mouseMoveEvent = self.keywords_text_mouse_move_event
 
     # Les méthodes suivantes sont appelées lors des événements :
 
@@ -347,12 +349,16 @@ class MainWindow(QMainWindow):
             for restoregene in restorelistgene:
                 idea = restoregene.split("@&&%*****")
                 keywords=idea[3].split(' ')
-                self.generated_keys.append(idea[0], int(idea[1]),idea[2],keywords)
+                font = QFont()
+                font.fromString(idea[2])
+                self.generated_keys.append(dm.Idea(idea[0], int(idea[1]), font, keywords))
             restorelistad=attributes_list[4].split("@$?&")
             for restoread in restorelistad:
                 idea = restoread.split("@&&%*****")
                 keywords = idea[3].split(' ')
-                self.generated_keys.append(idea[0], int(idea[1]), idea[2], keywords)
+                font = QFont()
+                font.fromString(idea[2])
+                self.generated_keys.append(dm.Idea(idea[0], int(idea[1]), font, keywords))
             self.all_keys = self.generated_keys + self.added_keys
 
     def write_keys(self):
@@ -431,54 +437,22 @@ class MainWindow(QMainWindow):
         pos = self.notes_text.verticalScrollBar().sliderPosition()
         self.keywords_text.verticalScrollBar().setSliderPosition(pos)
 
-    def highlight_phrase(self, phrase, line):
 
-        cursor = self.notes_text.textCursor()
-        co.move_cursor_to_line(cursor, line)
-        cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock)
-        last_pos = cursor.position()
-
-        cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
-        while phrase not in cursor.selectedText():  # Avancer le curseur vers le début de la phrase
-            cursor.clearSelection()
-            cursor.setPosition(last_pos)
-            cursor.movePosition(QTextCursor.MoveOperation.NextCharacter)
-            last_pos = cursor.position()
-            cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
-
-        cursor.clearSelection()
-        cursor.setPosition(last_pos)
-        cursor.movePosition(QTextCursor.MoveOperation.NextCharacter, QTextCursor.MoveMode.KeepAnchor)
-        while phrase not in cursor.selectedText():  # Reculer le curseur vers la fin de la phrase
-            cursor.movePosition(QTextCursor.MoveOperation.NextCharacter, QTextCursor.MoveMode.KeepAnchor)
-
-        self.notes_text.setTextBackgroundColor(QColorConstants.Yellow)
-        cursor.clearSelection()
-
-    def keywords_text_mouse_event(self, event):
+    def keywords_text_mouse_clic_event(self, event: QMouseEvent):
 
         QTextEdit.mousePressEvent(self.keywords_text, event)
         if len(self.all_keys) == 0:
             return
+        highlighting.highlight(self.notes_text, self.keywords_text, event.pos(), self.all_keys, True)
 
-        keys_cursor = self.keywords_text.cursorForPosition(event.pos())
-        keys_cursor.movePosition(QTextCursor.MoveOperation.WordLeft)
-        keys_cursor.movePosition(QTextCursor.MoveOperation.NextWord, QTextCursor.MoveMode.KeepAnchor)
-        keyword = keys_cursor.selectedText().strip()
-        self.notes_text.moveCursor(QTextCursor.MoveOperation.NextWord, QTextCursor.MoveMode.KeepAnchor)
-        self.notes_text.setTextBackgroundColor(QColorConstants.Yellow)
-        self.keywords_text.setTextBackgroundColor(QColorConstants.Yellow)
-
-        line = keys_cursor.blockNumber()
-
-        for idea in self.all_keys:
-            if idea.line < line:
-                continue
-            elif idea.line == line:
-                if keyword in idea.keywords:
-                    phrase = idea.phrase
-                    self.highlight_phrase(phrase, line)
-                    break
+    def keywords_text_mouse_move_event(self, event: QMouseEvent):
+        QTextEdit.mouseMoveEvent(self.keywords_text, event)
+        cursor = self.notes_text.cursorForPosition(event.pos())
+        cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
+        if len(cursor.selectedText().strip()) == 0:
+            QApplication.restoreOverrideCursor()
+            return
+        QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
 
     def clear_gen_keys(self):
         self.generated_keys.clear()
