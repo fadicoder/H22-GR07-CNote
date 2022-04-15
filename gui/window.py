@@ -1,5 +1,5 @@
 import dictmanager as dm
-from gui import cursoroperations as co
+from gui import cursoroperations as co, Input
 import notes
 from gui import highlighting
 import os
@@ -55,6 +55,9 @@ class MainWindow(QMainWindow):
         self.images = []
         self.last_text = self.notes_text
 
+        self.keyPressEvent = self.on_key_pressed
+        self.keyReleaseEvent = self.on_key_released
+
     def __init_menubar(self):
         """
         Initialise les éléments de la bare de menu.
@@ -73,8 +76,8 @@ class MainWindow(QMainWindow):
         load_act.setShortcut('Ctrl+L')
         load_act.triggered.connect(self.load)
 
-        clear_text_act = QAction('Clear all notes', self)
-        clear_text_act.triggered.connect(self.clear_notes)
+        self.clear_text_act = QAction('Clear all notes', self)
+        self.clear_text_act.triggered.connect(self.clear_notes)
 
         sign_out_act = QAction('Sign out', self)
         sign_out_act.triggered.connect(self.show_welcome_page)
@@ -108,15 +111,17 @@ class MainWindow(QMainWindow):
         account_menu.addAction(sign_out_act)
 
         file_menu = self.menubar.addMenu('File')
-        file_menu.addActions([adjust_keys_act, clear_text_act, exit_act])
+        file_menu.addActions([self.clear_text_act, exit_act])
 
-        insert_menu = self.menubar.addMenu('Insert')
-        insert_menu.addAction(insert_image_act)
+        self.insert_menu = self.menubar.addMenu('Insert')
+        self.insert_menu.addAction(insert_image_act)
 
-        keywords_menu = self.menubar.addMenu('Keywords')
-        keywords_menu.addAction(generate_act)
-        keywords_menu.addSeparator()
-        keywords_menu.addActions([clear_added_keys_act, clear_gen_keys_act, clear_all_keys_act])
+        self.keywords_menu = self.menubar.addMenu('Keywords')
+        self.keywords_menu.addAction(generate_act)
+        self.keywords_menu.addSeparator()
+        self.keywords_menu.addActions([clear_added_keys_act, clear_gen_keys_act, clear_all_keys_act])
+        self.keywords_menu.addSeparator()
+        self.keywords_menu.addAction(adjust_keys_act)
 
     def __init_toolbar(self):
 
@@ -229,6 +234,7 @@ class MainWindow(QMainWindow):
         self.keyword_line = QLineEdit()
         self.add_btn = QPushButton('Add keyword')
         self.generate_btn = QPushButton('Generate')
+        self.highlighter = highlighting.HighlightingSystem(self.keywords_text, self.notes_text, self.set_freeze)
         self.__notes_wid_properties()
 
         # Organizing elements in layouts
@@ -424,10 +430,13 @@ class MainWindow(QMainWindow):
     def drop_event_notes_text(self, event):
         if event.mimeData().hasImage:
             event.setDropAction(Qt.DropAction.CopyAction)
-            path = event.mimeData().urls()[0].toLocalFile()
-            image = QImage(path)
-            self.images.append(image)
-            self.notes_text.textCursor().insertImage(image)
+            urls = event.mimeData().urls()
+            if len(urls) >= 1:
+                path = urls[0].toLocalFile()
+                image = QImage(path)
+                self.images.append(image)
+                self.notes_text.textCursor().insertImage(image)
+
 
     def move_notes_bar(self):
         pos = self.keywords_text.verticalScrollBar().sliderPosition()
@@ -443,7 +452,15 @@ class MainWindow(QMainWindow):
         QTextEdit.mousePressEvent(self.keywords_text, event)
         if len(self.all_keys) == 0:
             return
-        highlighting.highlight(self.notes_text, self.keywords_text, event.pos(), self.all_keys, True)
+        self.highlighter.highlight(event.pos(), self.all_keys)
+
+    def on_key_pressed(self, event: QKeyEvent):
+        QMainWindow.keyPressEvent(self, event)
+        Input.press_key(event.key())
+
+    def on_key_released(self, event: QKeyEvent):
+        QMainWindow.keyReleaseEvent(self, event)
+        Input.release_key(event.key())
 
     def keywords_text_mouse_move_event(self, event: QMouseEvent):
         QTextEdit.mouseMoveEvent(self.keywords_text, event)
@@ -453,6 +470,14 @@ class MainWindow(QMainWindow):
             QApplication.restoreOverrideCursor()
             return
         QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
+
+    def set_freeze(self, freeze):
+        self.notes_text.setReadOnly(freeze)
+        self.generate_btn.setDisabled(freeze)
+        self.add_btn.setDisabled(freeze)
+        self.keywords_menu.setDisabled(freeze)
+        self.insert_menu.setDisabled(freeze)
+        self.clear_text_act.setDisabled(freeze)
 
     def clear_gen_keys(self):
         self.generated_keys.clear()
