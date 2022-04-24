@@ -8,8 +8,7 @@ def press_key(key) -> None:
 
 
 def release_key(key) -> None:
-    if key in keys:
-        keys[key] = False
+    keys[key] = False
 
 
 def is_pressed(key) -> bool:

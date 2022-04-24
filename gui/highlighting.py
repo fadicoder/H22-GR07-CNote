@@ -36,9 +36,8 @@ class HighlightingSystem:
 
     def highlight_with_key(self, key, all_keys):
 
-        if Input.is_pressed(Qt.Key.Key_Control) or Input.is_pressed(Qt.Key.Key_Shift):
-            return False
-
+        if Qt.KeyboardModifier.ShiftModifier in QApplication.keyboardModifiers():
+            return
 
         cursor = self.keys_text.textCursor()
         cursor.setPosition(self.last_highlight_pos)
@@ -54,12 +53,12 @@ class HighlightingSystem:
         else:
             return False
 
+        pos = cursor.position()
         if not self.has_selection():
-            self.__highlight_extreme_key(cursor, all_keys)
-            return True
+            pos = HighlightingSystem.__get_first_key_pos(cursor)
 
         if is_possible:
-            self.highlight(cursor.position(), all_keys)
+            self.highlight(pos, all_keys)
 
         return True
 
@@ -80,21 +79,21 @@ class HighlightingSystem:
         :param all_keys : liste des idées
         """
         self.all_keys = all_keys
+        modifiers = QApplication.keyboardModifiers()
 
         if self.origin_text is None:  # si le document est nul, alors c'est la 1ère opération de surlignage.
             self.origin_text = QTextEdit()
             self.origin_text.setHtml(self.notes_text.toHtml())
 
-        if Input.is_pressed(Qt.Key.Key_Control):
+        if Qt.KeyboardModifier.ControlModifier == modifiers:
             self.__highlight_key(pos, True, True)
 
-        elif Input.is_pressed(Qt.Key.Key_Shift):
+        elif Qt.KeyboardModifier.ShiftModifier == modifiers:
             self.__highlight_from_to(pos)
 
-        else:
+        elif modifiers == Qt.KeyboardModifier.NoModifier:
             self.__clear_highlights(pos)
             self.__highlight_key(pos, True, True)
-
 
         if len(self.highlights) == 0:  # S'il n'y plus aucun surlignage, libérer le text
             self.origin_text = None
@@ -132,15 +131,16 @@ class HighlightingSystem:
         for pos in self.highlights.keys():
             self.__highlight_key(pos, True, False)
 
-    def __highlight_extreme_key(self, cursor: QTextCursor, all_keys):
+    @staticmethod
+    def __get_first_key_pos(cursor: QTextCursor):
 
         cursor.movePosition(QTextCursor.MoveOperation.Start)
         cursor.movePosition(QTextCursor.MoveOperation.NextWord, QTextCursor.MoveMode.KeepAnchor)
 
-        pos = 0
+
         if cursor.selectedText().strip() == '':
-            pos = cursor.position()
-        self.highlight(pos, all_keys)
+            return cursor.position() + 1
+        return 0
 
     def __highlight_key(self, pos, to_highlight, double_check_to_highlight):
         """

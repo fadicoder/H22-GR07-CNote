@@ -543,7 +543,12 @@ class MainWindow(QMainWindow):
             return
 
         QLineEdit.keyPressEvent(self.keyword_line, event)
-        self.keyword_line.lower()
+
+        word = self.keyword_line.text()
+        if word == '':
+            return
+        if word[-1].isupper():
+            self.keyword_line.setText(word.lower())
 
     def del_selected_ideas(self):
 
@@ -564,6 +569,7 @@ class MainWindow(QMainWindow):
         self.notes_text.setReadOnly(freeze)
         self.keywords_menu.setDisabled(freeze)
         self.insert_menu.setDisabled(freeze)
+        self.keyword_line.setDisabled(freeze)
         self.clear_text_act.setDisabled(freeze)
 
     def clear_gen_keys(self):
