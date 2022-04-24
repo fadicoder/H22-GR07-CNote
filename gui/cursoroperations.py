@@ -7,18 +7,25 @@ def move_cursor_to_line(cursor: QTextCursor, line: int):
     :param cursor : le curseur à déplacer.
     :param line : la ligne sur laquelle le curseur sera déplacé.
     """
+    this_line = cursor.blockNumber()
+    last_line = this_line
 
-    while cursor.blockNumber() < line:
+    while this_line < line:
         cursor.movePosition(QTextCursor.MoveOperation.NextBlock)
+        this_line = cursor.blockNumber()
+        if cursor.blockNumber() == last_line:
+            return False
+        last_line = this_line
+
     while cursor.blockNumber() > line:
         cursor.movePosition(QTextCursor.MoveOperation.PreviousBlock)
 
+    return True
+
 
 def get_start_of_phrase(cursor: QTextCursor, phrase: str, start_line: int):
-
     if cursor.document().blockCount() - 1 < start_line:
         return
-
 
     move_cursor_to_line(cursor, start_line)
 
@@ -32,7 +39,6 @@ def get_start_of_phrase(cursor: QTextCursor, phrase: str, start_line: int):
         cursor.setPosition(start_pos)
         cursor.movePosition(QTextCursor.MoveOperation.NextCharacter, QTextCursor.MoveMode.KeepAnchor, len(phrase))
 
-    print(start_pos)
     return start_pos
 
 
@@ -73,11 +79,10 @@ def get_max_fonts(text, from_to):
     :return Une liste des plus grandes police de caractère de chaque ligne.
     """
 
-    doc = text.document()
     cursor = text.textCursor()
     max_fonts = []
     start = 0
-    end = doc.blockCount()
+    end = text.toPlainText().count('\n') + 1
 
     if from_to is None:
         cursor.movePosition(QTextCursor.MoveOperation.Start)
@@ -88,10 +93,9 @@ def get_max_fonts(text, from_to):
         move_cursor_to_line(cursor, start)
         cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock)
 
-    for i in range(start, end+1):
+    for i in range(start, end):
         max_fonts.append(get_max_font_by_line(text, cursor, i, True))
         cursor.movePosition(QTextCursor.MoveOperation.NextBlock)
-
 
     return max_fonts
 
@@ -116,3 +120,35 @@ def adjust_idea_fonts(text, all_keys: list):
 
             while idea.same_line(i + 1):
                 all_keys[i + 1].max_font = max_fonts[idea.line]
+
+
+def move_cursor_to_next_word(cursor: QTextCursor, move_operation: QTextCursor.MoveOperation):
+
+
+    valid_operation = cursor.movePosition(move_operation)
+    first_line = cursor.blockNumber()
+
+    if not valid_operation:
+        return False
+
+
+
+    cursor.movePosition(QTextCursor.MoveOperation.NextCharacter, QTextCursor.MoveMode.KeepAnchor)
+    last_position = cursor.position()
+
+    if first_line != cursor.blockNumber():
+        return
+
+    while cursor.selectedText().strip() == '':
+        cursor.clearSelection()
+        valid_operation = cursor.movePosition(move_operation)
+
+        if (not valid_operation) or (last_position == cursor.position()):
+            return False
+
+        last_position = cursor.position()
+        cursor.movePosition(QTextCursor.MoveOperation.NextCharacter, QTextCursor.MoveMode.KeepAnchor)
+
+    cursor.movePosition(QTextCursor.MoveOperation.StartOfWord)
+
+    return True

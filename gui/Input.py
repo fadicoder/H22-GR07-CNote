@@ -1,14 +1,13 @@
-from PyQt6.QtGui import QKeySequence
 from sortedcontainers import SortedDict
 
 keys = SortedDict()
 
 
-def press_key(key: QKeySequence) -> None:
+def press_key(key) -> None:
     keys[key] = True
 
 
-def release_key(key: QKeySequence) -> None:
+def release_key(key) -> None:
     if key in keys:
         keys[key] = False
 

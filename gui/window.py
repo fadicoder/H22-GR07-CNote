@@ -1,23 +1,26 @@
 import dictmanager as dm
 from gui import cursoroperations as co, Input
 import notes
-from gui import highlighting
+from idea import Idea
+from gui.highlighting import HighlightingSystem
 import os
 import sys
 
 from PyQt6.QtWidgets import *
+from PyQt6.QtGui import QTextCursor
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import *
 
 '''
-- insert image dimensions
+- image dimensions
 - add draw
-
+- extract
 - repair adjust keys
-- high-light phrase
-- copy/past/delete ideas
-
-- colors+highliter
+- light high-light phrase monday
+- cut
+- families keywords tuesday
+- delete 1 selected idea + with no phrase
+- change doc.blockCount() to count(\n)
 '''
 
 
@@ -28,7 +31,6 @@ class MainWindow(QMainWindow):
     def __init__(self):
         self.app = QApplication(sys.argv)
         super().__init__()
-
         self.widgets_lst = QStackedWidget()
         self.setCentralWidget(self.widgets_lst)
         self.setWindowTitle("C-Note")
@@ -39,6 +41,8 @@ class MainWindow(QMainWindow):
         self.widgets_lst.addWidget(self.welcome_widget)
         self.widgets_lst.setCurrentWidget(self.welcome_widget)
 
+        self.highlight_color = QColorConstants.Cyan
+        self.text_color = QColorConstants.Red
         self.menubar = QMenuBar()
         self.__init_menubar()
         self.menubar.setVisible(False)
@@ -54,9 +58,6 @@ class MainWindow(QMainWindow):
         self.all_keys = self.generated_keys + self.added_keys
         self.images = []
         self.last_text = self.notes_text
-
-        self.keyPressEvent = self.on_key_pressed
-        self.keyReleaseEvent = self.on_key_released
 
     def __init_menubar(self):
         """
@@ -125,6 +126,12 @@ class MainWindow(QMainWindow):
 
     def __init_toolbar(self):
 
+        self.keyword_line = QLineEdit()
+        self.keyword_line.setMaximumWidth(250)
+        self.keyword_line.setPlaceholderText('Add keyword')
+        self.keyword_line.setAcceptDrops(False)
+        self.keyword_line.keyPressEvent = self.add_key_line_press_event
+
         self.size_spin = QSpinBox()
         self.size_spin.setValue(MainWindow.DEFAULT_FONT.pointSize())
         self.size_spin.valueChanged.connect(lambda: self.last_text.setFontPointSize(self.size_spin.value()))
@@ -158,17 +165,32 @@ class MainWindow(QMainWindow):
         self.italic_act.triggered.connect(lambda checked: self.last_text.setFontItalic(checked))
         self.underline_act.triggered.connect(lambda checked: self.last_text.setFontUnderline(checked))
 
+        highlight_pixmap = QPixmap(100, 100)
+        highlight_pixmap.fill(self.highlight_color)
+        text_color_pixmap = QPixmap(100, 100)
+        text_color_pixmap.fill(self.text_color)
+        self.highlight_act = QAction(QIcon('resources/Highlight.png'), 'Highlight', self)
+        self.highlight_color_picker_act = QAction(QIcon(highlight_pixmap), 'Highlighter color picker', self)
+        self.text_color_act = QAction(QIcon('resources/TextColor.png'), 'Color Text', self)
+        self.text_color_picker_act = QAction(QIcon(text_color_pixmap), 'Text color picker', self)
+        self.highlight_color_picker_act.triggered.connect(lambda: self.select_color(True))
+        self.text_color_picker_act.triggered.connect(lambda: self.select_color(False))
+        self.highlight_act.triggered.connect(lambda: self.color(True))
+        self.text_color_act.triggered.connect(lambda: self.color(False))
+
+        self.main_toolbar.setStyleSheet("QToolBar{spacing:45px;}")
+        self.main_toolbar.addWidget(self.keyword_line)
+        self.main_toolbar.addSeparator()
         self.main_toolbar.addWidget(self.font_combo)
         self.main_toolbar.addWidget(self.size_spin)
         self.main_toolbar.addSeparator()
         self.main_toolbar.addActions([align_left_act, align_center_act, align_right_act])
         self.main_toolbar.addSeparator()
         self.main_toolbar.addActions([self.bold_act, self.italic_act, self.underline_act])
-
-        hi_act = QAction(QIcon('resources/Italic.png'), 'Highlight', self)
-        hi_act.triggered.connect(
-            lambda: self.notes_text.setTextBackgroundColor(QColorConstants.Yellow))
-        self.main_toolbar.addAction(hi_act)
+        self.main_toolbar.addSeparator()
+        self.main_toolbar.addActions([self.highlight_act, self.highlight_color_picker_act])
+        self.main_toolbar.addSeparator()
+        self.main_toolbar.addActions(([self.text_color_act, self.text_color_picker_act]))
 
         # self.notes_highlighter.highlightBlock(self.notes_text.textCursor().selection().toPlainText()))
 
@@ -222,7 +244,6 @@ class MainWindow(QMainWindow):
         """
 
         notes_widget = QWidget()
-        keywords_widget = QWidget(self)
         root = QVBoxLayout()
         notes_widget.setLayout(root)
 
@@ -232,9 +253,7 @@ class MainWindow(QMainWindow):
         self.keywords_text = QTextEdit()
         self.headLines_text = QTextEdit()
         self.keyword_line = QLineEdit()
-        self.add_btn = QPushButton('Add keyword')
-        self.generate_btn = QPushButton('Generate')
-        self.highlighter = highlighting.HighlightingSystem(self.keywords_text, self.notes_text, self.set_freeze)
+        self.highlighter = HighlightingSystem(self.keywords_text, self.notes_text, self.set_freeze)
         self.__notes_wid_properties()
 
         # Organizing elements in layouts
@@ -243,15 +262,7 @@ class MainWindow(QMainWindow):
         middle_text_layout = QHBoxLayout()
         middle_text_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         texts_layout.addWidget(self.headLines_text)
-        keywords_layout = QVBoxLayout(keywords_widget)
-        keywords_layout.addWidget(self.keywords_text)
-        add_key_layout = QHBoxLayout()
-        add_key_layout.addWidget(self.keyword_line)
-        add_key_layout.addWidget(self.add_btn)
-        add_key_layout.addWidget(self.generate_btn)
-        keywords_layout.addLayout(add_key_layout)
-        notes_widget.setLayout(keywords_layout)
-        middle_text_layout.addWidget(keywords_widget, 2)
+        middle_text_layout.addWidget(self.keywords_text, 2)
         middle_text_layout.addWidget(self.notes_text, 10)
         texts_layout.addLayout(middle_text_layout)
         texts_layout.addWidget(self.summery_text)
@@ -290,8 +301,6 @@ class MainWindow(QMainWindow):
     def __set_on_events_notes_wid(self):
         self.notes_text.verticalScrollBar().valueChanged.connect(self.move_keys_bar)
         self.keywords_text.verticalScrollBar().valueChanged.connect(self.move_notes_bar)
-        self.add_btn.clicked.connect(lambda: self.add_keyword(self.keyword_line.text()))
-        self.generate_btn.clicked.connect(self.generate)
         self.notes_text.dropEvent = self.drop_event_notes_text
 
         self.summery_text.cursorPositionChanged.connect(lambda: self.update_cursor_infos(self.summery_text, None))
@@ -301,6 +310,7 @@ class MainWindow(QMainWindow):
         self.notes_text.mousePressEvent = lambda event: self.update_cursor_infos(self.notes_text, event)
         self.headLines_text.mousePressEvent = lambda event: self.update_cursor_infos(self.headLines_text, event)
         self.keywords_text.mousePressEvent = self.keywords_text_mouse_clic_event
+        self.keywords_text.keyPressEvent = self.keywords_text_press_event
         self.keywords_text.mouseMoveEvent = self.keywords_text_mouse_move_event
 
     # Les méthodes suivantes sont appelées lors des événements :
@@ -322,28 +332,27 @@ class MainWindow(QMainWindow):
 
     def save_as(self):
 
-
         self.save(1)
 
-    def save(self,saveas):
+    def save(self, saveas):
         """
         Cette fonction sauvegarde le document
         """
         if saveas != 1:
-            saveas=0
+            saveas = 0
         sumtext = self.summery_text.toHtml()
         headtext = self.headLines_text.toHtml()
         maintext = self.notes_text.toHtml()
-        genekeys= self.generated_keys
-        adkeys=self.added_keys
-        notes.notes.notessaves(maintext, sumtext, headtext,genekeys,adkeys,saveas)
+        genekeys = self.generated_keys
+        adkeys = self.added_keys
+        notes.notes.notessaves(maintext, sumtext, headtext, genekeys, adkeys, saveas)
 
     def load(self):
         """
         Cette fonction charge le document
         """
-        txtsl =notes.notes.notesload()
-        if txtsl!=None:
+        txtsl = notes.notes.notesload()
+        if txtsl is not None:
             attributes_list = txtsl.split('@&%*')
             self.summery_text.setHtml(attributes_list[1])
             self.headLines_text.setHtml(attributes_list[2])
@@ -354,27 +363,27 @@ class MainWindow(QMainWindow):
             restorelistgene = attributes_list[3].split("@$?&")
             for restoregene in restorelistgene:
                 idea = restoregene.split("@&&%*****")
-                keywords=idea[3].split(' ')
+                keywords = idea[3].split(' ')
                 font = QFont()
                 font.fromString(idea[2])
-                self.generated_keys.append(dm.Idea(idea[0], int(idea[1]), font, keywords))
-            restorelistad=attributes_list[4].split("@$?&")
+                self.generated_keys.append(Idea(idea[0], int(idea[1]), font, keywords))
+            restorelistad = attributes_list[4].split("@$?&")
             for restoread in restorelistad:
                 idea = restoread.split("@&&%*****")
                 keywords = idea[3].split(' ')
                 font = QFont()
                 font.fromString(idea[2])
-                self.generated_keys.append(dm.Idea(idea[0], int(idea[1]), font, keywords))
+                self.generated_keys.append(Idea(idea[0], int(idea[1]), font, keywords))
             self.all_keys = self.generated_keys + self.added_keys
 
     def write_keys(self):
         """
-        Cette fonction écrit une liste d'idées données en argument dans le keywords_text.
+        Cette fonction écrit la liste d'idées dans le keywords_text.
         """
         if self.all_keys is None:
             return
 
-        self.all_keys.sort(key=dm.Idea.get_line)
+        self.all_keys.sort(key=Idea.get_line)
         self.keywords_text.clear()
 
         for i, key in enumerate(self.all_keys):
@@ -400,7 +409,7 @@ class MainWindow(QMainWindow):
     def update_cursor_infos(self, text, event):
         """
         Cette fonction est appelée à chaque fois que le curseur change de position. Elle initialise le QFont affiché
-        dans le Toolbar et redéfinit last_wid au dernier widget utilisé. Si un event non Null est donné en paramètre,
+        dans le Toolbar et redéfinit last_wid au dernier widget utilisé. Si un event non null est donné en paramètre,
         cela signifie que la fonction est appelé en raison d'une clique de souris. Dans ce cas, le last_text change
         pour le widget actuel.
         """
@@ -416,6 +425,8 @@ class MainWindow(QMainWindow):
             # Si l'évènement n'est pas null, réaliser l'évènement de la clique de souris et réinitialiser last_text
             self.last_text = text
             QTextEdit.mousePressEvent(text, event)
+            # Ensuite, effacer les surlignages
+            self.highlighter.clear_all_selections(False)
 
     def insert_image(self):
         home = os.path.join(os.environ['HOMEPATH'])
@@ -427,6 +438,28 @@ class MainWindow(QMainWindow):
         self.images.append(image)
         self.notes_text.textCursor().insertImage(image)
 
+    def select_color(self, for_highlight):
+        if for_highlight:
+            self.highlight_color = QColorDialog.getColor(self.highlight_color)
+            pixmap = QPixmap(100, 100)
+            pixmap.fill(self.highlight_color)
+            self.highlight_color_picker_act.setIcon(QIcon(pixmap))
+        else:
+            self.text_color = QColorDialog.getColor(self.text_color)
+            pixmap = QPixmap(100, 100)
+            pixmap.fill(self.text_color)
+            self.text_color_picker_act.setIcon(QIcon(pixmap))
+
+    def color(self, for_highlight):
+        if for_highlight:
+            self.last_text.setTextBackgroundColor(self.highlight_color)
+        else:
+            self.last_text.setTextColor(self.text_color)
+
+        cursor = self.last_text.textCursor()
+        cursor.clearSelection()
+        self.last_text.setTextCursor(cursor)
+
     def drop_event_notes_text(self, event):
         if event.mimeData().hasImage:
             event.setDropAction(Qt.DropAction.CopyAction)
@@ -436,7 +469,8 @@ class MainWindow(QMainWindow):
                 image = QImage(path)
                 self.images.append(image)
                 self.notes_text.textCursor().insertImage(image)
-
+                return
+        QTextEdit.dropEvent(self.notes_text, event)
 
     def move_notes_bar(self):
         pos = self.keywords_text.verticalScrollBar().sliderPosition()
@@ -446,7 +480,6 @@ class MainWindow(QMainWindow):
         pos = self.notes_text.verticalScrollBar().sliderPosition()
         self.keywords_text.verticalScrollBar().setSliderPosition(pos)
 
-
     def keywords_text_mouse_clic_event(self, event: QMouseEvent):
 
         QTextEdit.mousePressEvent(self.keywords_text, event)
@@ -454,27 +487,81 @@ class MainWindow(QMainWindow):
             return
         self.highlighter.highlight(event.pos(), self.all_keys)
 
-    def on_key_pressed(self, event: QKeyEvent):
-        QMainWindow.keyPressEvent(self, event)
-        Input.press_key(event.key())
-
-    def on_key_released(self, event: QKeyEvent):
-        QMainWindow.keyReleaseEvent(self, event)
-        Input.release_key(event.key())
-
     def keywords_text_mouse_move_event(self, event: QMouseEvent):
+
         QTextEdit.mouseMoveEvent(self.keywords_text, event)
-        cursor = self.notes_text.cursorForPosition(event.pos())
-        cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
-        if len(cursor.selectedText().strip()) == 0:
-            QApplication.restoreOverrideCursor()
+
+        cursor = self.keywords_text.cursorForPosition(event.pos())
+        cursor.movePosition(QTextCursor.MoveOperation.NextCharacter, QTextCursor.MoveMode.KeepAnchor)
+        if not len(cursor.selectedText().strip()) == 0:
+            self.keywords_text.viewport().setCursor(Qt.CursorShape.PointingHandCursor)
             return
-        QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
+
+        # self.highlighter.light_highlight(event.pos(), self.all_keys)
+
+        self.keywords_text.viewport().unsetCursor()
+
+    def keywords_text_press_event(self, event: QKeyEvent):
+
+        key = event.key()
+
+        arrow_key_pressed = self.highlighter.highlight_with_key(key, self.all_keys)
+
+        if arrow_key_pressed:
+            return
+
+        if Qt.Key.Key_Delete == key:
+            self.del_selected_ideas()
+
+        elif event.matches(QKeySequence.StandardKey.Copy):
+
+            if self.highlighter.has_selection():
+                self.highlighter.copy_selection()
+                return
+            else:
+                HighlightingSystem.clear_copied_elements()
+
+        elif event.matches(QKeySequence.StandardKey.Paste):
+            if HighlightingSystem.has_copied_elements():
+                self.add_copied_ideas()
+                return
+
+        QTextEdit.keyPressEvent(self.keywords_text, event)
+
+    def add_key_line_press_event(self, event: QKeyEvent):
+
+        if event.key() == Qt.Key.Key_Space:  # remplacer le caractère espace par '_'
+            self.keyword_line.insert('_')
+            return
+
+        if event.key() == Qt.Key.Key_Return:
+            self.add_keyword()
+            self.keyword_line.clear()
+            return
+
+        if event.matches(QKeySequence.StandardKey.Paste):
+            return
+
+        QLineEdit.keyPressEvent(self.keyword_line, event)
+        self.keyword_line.lower()
+
+    def del_selected_ideas(self):
+
+        selections = self.highlighter.pop_selected_elements()
+
+        for pos in selections.keys():
+            idea = selections[pos]
+            cursor: QTextCursor = self.keywords_text.textCursor()
+            cursor.setPosition(pos)
+            cursor.movePosition(QTextCursor.MoveOperation.WordRight, QTextCursor.MoveMode.KeepAnchor)
+            keyword = cursor.selectedText().strip().lower()
+            idea.remove_keyword(keyword)
+
+        self.set_freeze(False)
+        self.write_keys()
 
     def set_freeze(self, freeze):
         self.notes_text.setReadOnly(freeze)
-        self.generate_btn.setDisabled(freeze)
-        self.add_btn.setDisabled(freeze)
         self.keywords_menu.setDisabled(freeze)
         self.insert_menu.setDisabled(freeze)
         self.clear_text_act.setDisabled(freeze)
@@ -494,6 +581,7 @@ class MainWindow(QMainWindow):
 
     def clear_all_keys(self):
 
+        self.highlighter.clear_all_selections(False)
         self.generated_keys.clear()
         self.added_keys.clear()
         self.all_keys.clear()
@@ -505,20 +593,53 @@ class MainWindow(QMainWindow):
         self.summery_text.clear()
         self.clear_all_keys()
 
+    def keyPressEvent(self, a0: QKeyEvent) -> None:
+        super().keyPressEvent(a0)
+        Input.press_key(a0.key())
+
+    def keyReleaseEvent(self, a0: QKeyEvent):
+        super().keyReleaseEvent(a0)
+        Input.release_key(a0.key())
+
+    def add_copied_ideas(self):
+
+        cursor = self.notes_text.textCursor()
+        insert_line = cursor.blockNumber()
+        copied_ideas = HighlightingSystem.get_copied_ideas(insert_line)
+        last_line = copied_ideas[-1].line
+
+        shift = last_line + 1 - insert_line
+        for idea in self.generated_keys:
+            if idea.line >= insert_line:
+                idea.shift_line(shift)
+        for idea in self.added_keys:
+            if idea.line >= insert_line:
+                idea.shift_line(shift)
+
+        self.added_keys.extend(copied_ideas)
+        self.added_keys.sort(key=Idea.get_line)
+        self.generate_empty()
+        self.all_keys.extend(copied_ideas)
+        self.write_keys()
+
+        for idea in copied_ideas:
+            cursor.insertText(idea.phrase + '\n')
+
     def launch(self):
         """
         Lance le programme !
         """
+
+        self.notes_text.setFocus()
         self.showMaximized()
         sys.exit(self.app.exec())
 
-    def add_keyword(self, new_key):
+    def add_keyword(self):
         """
-        Cette fonction ajoute un
-        :param new_key:
+        Cette fonction ajoute le mot-clé entré manuellement
         """
+        new_key = self.keyword_line.text().strip().lower()
 
-        self.keyword_line.clear()
         cursor = self.notes_text.textCursor()
 
         if cursor.hasSelection():
@@ -526,14 +647,18 @@ class MainWindow(QMainWindow):
             cursor.clearSelection()
         else:
             phrase = cursor.block().text()
+            print(phrase)
+
+        if new_key is None:
+            new_key = phrase.strip().lower()
 
         line = cursor.blockNumber()
         cursor.setPosition(cursor.selectionStart())
         font = co.get_max_font_by_line(self.notes_text, cursor, line, True)
-        new_idea = dm.Idea(phrase, line, font, new_key)
+        new_idea = Idea(phrase, line, font, new_key)
 
         self.added_keys.append(new_idea)
-        self.added_keys.sort(key=dm.Idea.get_line)
+        self.added_keys.sort(key=Idea.get_line)
         self.generate_empty()
         self.all_keys.append(new_idea)
         self.write_keys()
@@ -558,7 +683,7 @@ class MainWindow(QMainWindow):
         max_fonts = co.get_max_fonts(self.notes_text, from_to)
 
         dm.get_ideas(text, max_fonts, self.generated_keys, from_to)
-        self.generated_keys.sort(key=dm.Idea.get_line)
+        self.generated_keys.sort(key=Idea.get_line)
         self.all_keys = self.added_keys + self.generated_keys
         self.write_keys()
 
@@ -576,7 +701,7 @@ class MainWindow(QMainWindow):
 
             phrase = doc.findBlockByLineNumber(line).text()
             font = co.get_max_font_by_line(self.notes_text, self.notes_text.textCursor(), line, False)
-            idea = dm.Idea(phrase, line, font)
+            idea = Idea(phrase, line, font)
 
             if len(self.generated_keys) <= i:  # Si on se rend à la dernière idée, ajouter une idée
                 self.generated_keys.insert(line, idea)
