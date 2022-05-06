@@ -98,8 +98,8 @@ class MainWindow(QMainWindow):
         load_act.setShortcut('Ctrl+L')
         load_act.triggered.connect(lambda: self.create_note(from_disk=True))
 
-        export_docs_act = QAction('Export to .docx')
-        #export_docs_act.triggered.connect(self.notes.save_on_disk_docx)
+        export_docs_act = QAction('Export to .docx', self)
+        export_docs_act.triggered.connect(self.save_on_disk_docx)
 
         self.clear_text_act = QAction('Clear all notes', self)
         self.clear_text_act.triggered.connect(self.clear_notes)
@@ -160,7 +160,13 @@ class MainWindow(QMainWindow):
         self.keywords_menu.addActions([clear_added_keys_act, clear_gen_keys_act, clear_all_keys_act])
         self.keywords_menu.addSeparator()
         self.keywords_menu.addAction(adjust_keys_act)
-
+    def save_on_disk_docx(self):
+        sumtext = self.summery_text.toHtml()
+        headtext = self.headLines_text.toHtml()
+        maintext = self.notes_text.toHtml()
+        genekeys = self.generated_keys
+        adkeys = self.added_keys
+        self.notes.save_on_disk_docx(maintext, sumtext, headtext, genekeys, adkeys)
     def __init_toolbar(self):
 
         self.keyword_line = QLineEdit()

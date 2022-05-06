@@ -2,6 +2,7 @@ import pickle
 import easygui
 from PyQt6.QtGui import QFont
 from bs4 import BeautifulSoup
+from htmldocx import HtmlToDocx
 
 
 from idea import Idea
@@ -108,14 +109,14 @@ class Notes:
 
         txtsl = ''
 
-        if Notes.openedfilebefore == False:
+        if self.openedfilebefore == False:
             fileopened = easygui.filesavebox()
-            Notes.fileopenned = fileopened
-            Notes.openedfilebefore = True
-        if Notes.fileopenned != None:
+            self.fileopenned = fileopened
+            self.openedfilebefore = True
+        if self.fileopenned != None:
             txtsl = self.get_notes_info(maintxt, sumtxt, headtxt, genekeys, adkeys)
 
-        pickle.dump(txtsl, open(Notes.fileopenned, "wb"))  # sauvegarde le document
+        pickle.dump(txtsl, open(self.fileopenned, "wb"))  # sauvegarde le document
 
         openededbeforetemp = None
         fileoptemp = None
@@ -126,6 +127,14 @@ class Notes:
         if saveas == 1:
             Notes.openedfilebefore = openededbeforetemp
             Notes.fileopenned = fileoptemp
+
+    def save_on_disk_docx(self, maintxt, sumtxt, headtxt, genekeys, adkeys):  # sauvegarde le document en format docx
+
+        txtsl = ''
+        txtsl = self.get_notes_info(headtxt,  maintxt, sumtxt, genekeys, adkeys)
+        open('temphtml.txt','w').write(txtsl)
+        transformer = HtmlToDocx()
+        transformer.parse_html_file('temphtml.txt', self.title)
 
     def save_on_cloud(self, account, maintxt, sumtxt, headtxt, genekeys, adkeys):
         notes_info = self.get_notes_info(maintxt, sumtxt, headtxt, genekeys, adkeys)
