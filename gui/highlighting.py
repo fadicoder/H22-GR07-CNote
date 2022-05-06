@@ -68,9 +68,9 @@ class HighlightingSystem:
         afin de vérifier les entrées dans le clavier et faire les selection selon ces entrées.
 
         Si la touche CONTROL est enfoncée, la selection est multiple.
-        Si la touche SHIFT est enfoncée, la selection des élément entre le dernier surlignage et la position de la click
-        est automatique
-        Si aucun de ces deux touche n'est enfoncée, la selection est simple (un élément à la fois).
+        Si la touche SHIFT est enfoncée, la selection des éléments entre le dernier surlignage et la position
+        de la click est automatique.
+        Si aucun de ces deux touches n'est enfoncée, la selection est simple (un élément à la fois).
 
         Cette méthode fonction block toute modification du block des notes et des mots-clés et dé-block ceux-ci
         quand aucun élément n'est sélectionné.
@@ -153,7 +153,7 @@ class HighlightingSystem:
         Remarque : quand l'appel de fonction exige de vérifier l'état précédent du mot,
         l'opération désirée (surlignage ou dé-surlignage) pourrait être modifié afin d'opposer l'état précédent.
 
-        :param pos: position de la click ou du curseur
+        :param pos : position de la click ou du curseur
         :param to_highlight : boolean qui indique si le mot à position est à surligné ou non
         :param double_check_to_highlight : boolean qui indique de vérifier ou non l'état précèdent du mot
         """
@@ -206,7 +206,7 @@ class HighlightingSystem:
         (ou efface le surlignage)
         Cette fonction modifie la liste des éléments surlignés.
 
-        :param highlight_pos : position du mot clé (dans le block text des mot-clés.
+        :param highlight_pos : position du mot clé dans le block text des mot-clés.
         :param to_highlight : boolean qui indique si la phrase est à surligner ou non
         :param double_check : boolean qui indique si l'appel de la fonction est causé directement par l'utilisateur.
         """
@@ -260,11 +260,11 @@ class HighlightingSystem:
 
     def __skip_phrase_highlight(self, to_highlight, highlight_pos, idea):
         """
-        Cette fonction ajouter ou enlève la phrase à surligner sans la surlgner. Pour pouvoir laisser tomber
+        Cette fonction ajouter ou enlève la phrase à surligner sans la surligner. Pour pouvoir laisser tomber
         la phrase, il faut que cette fonction soit suivie d'un return.
-        :param to_highlight: boolean qui indique si la phrase est à surligner ou non
-        :param highlight_pos: position du mot-clé
-        :param idea: idée de phrase
+        :param to_highlight : boolean qui indique si la phrase est à surligner ou non
+        :param highlight_pos : position du mot-clé
+        :param idea : idée de phrase
         """
         if to_highlight:  # Si l'opération exigée est le surlignage, ajouter l'élément à la liste
             self.highlights[highlight_pos] = idea

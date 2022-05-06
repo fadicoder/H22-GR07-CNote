@@ -28,6 +28,9 @@ from PyQt6.QtGui import *
 - add options for modifications in account
 - adjust repair
 - highlighting bug
+- disk to cloud
+- create table if not exists
+- vérifier sauvgarde sur disk
 '''
 
 
@@ -95,6 +98,9 @@ class MainWindow(QMainWindow):
         load_act.setShortcut('Ctrl+L')
         load_act.triggered.connect(lambda: self.create_note(from_disk=True))
 
+        export_docs_act = QAction('Export to .docx')
+        export_docs_act.triggered.connect(self.notes.save_on_disk_docx)
+
         self.clear_text_act = QAction('Clear all notes', self)
         self.clear_text_act.triggered.connect(self.clear_notes)
 
@@ -139,6 +145,8 @@ class MainWindow(QMainWindow):
         self.file_menu.addAction(save_as_act)
         self.file_menu.addAction(save_on_cloud_act)
         self.file_menu.addAction(load_act)
+        self.file_menu.addSeparator()
+        self.file_menu.addAction(export_docs_act)
         self.file_menu.addSeparator()
         self.file_menu.addAction(self.clear_text_act)
 
@@ -293,6 +301,7 @@ class MainWindow(QMainWindow):
         choose_notes_layout = QHBoxLayout()
         choose_notes_layout.addWidget(self.notes_combo)
         choose_notes_layout.addWidget(self.open_selected_notes_btn)
+        layout.addSpacing(50)
         layout.addLayout(choose_notes_layout)
 
         notes_page.addTab(first_tab, "C-Note - " + self.account.username)
@@ -302,6 +311,7 @@ class MainWindow(QMainWindow):
         notes_page.tabCloseRequested.connect(lambda index: self.close_tab(notes_page, index))
         self.open_selected_notes_btn.clicked.connect(lambda: self.create_note())
 
+        self.create_note_btn.setMinimumSize(800, 150)
         return notes_page
 
     def __notes_widget(self, index, new_notes):
@@ -348,7 +358,7 @@ class MainWindow(QMainWindow):
         self.headLines_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         if new_notes:
-            title_font = QFont('Arial', 25)
+            title_font = QFont('Arial', 22)
             title_font.setBold(True)
             self.headLines_text.setCurrentFont(title_font)
             self.headLines_text.insertPlainText(self.notes.title + '\n')
@@ -509,7 +519,7 @@ class MainWindow(QMainWindow):
             else:
                 error_label.setText(self.account.error.get_desc())
 
-        def key_event(event:QKeyEvent):
+        def key_event(event: QKeyEvent):
             if event.key() == Qt.Key.Key_Return:
                 change_username()
                 return
@@ -686,35 +696,6 @@ class MainWindow(QMainWindow):
         adkeys = self.added_keys
         self.notes.save_on_disk(maintext, sumtext, headtext, genekeys, adkeys, saveas)
 
-    def load(self):
-        """
-        Cette fonction charge le document
-        """
-        txtsl = Notes.notesload(self.account)
-        if txtsl is not None:
-            attributes_list = txtsl.split('@&%*')
-            self.summery_text.setHtml(attributes_list[1])
-            self.headLines_text.setHtml(attributes_list[2])
-            self.notes_text.setHtml(attributes_list[0])
-            self.generated_keys.clear()
-            self.added_keys.clear()
-            self.all_keys = self.generated_keys + self.added_keys
-            restorelistgene = attributes_list[3].split("@$?&")
-            for restoregene in restorelistgene:
-                idea = restoregene.split("@&&%*****")
-                keywords = idea[3].split(' ')
-                font = QFont()
-                font.fromString(idea[2])
-                self.generated_keys.append(Idea(idea[0], int(idea[1]), font, keywords))
-            restorelistad = attributes_list[4].split("@$?&")
-            for restoread in restorelistad:
-                idea = restoread.split("@&&%*****")
-                keywords = idea[3].split(' ')
-                font = QFont()
-                font.fromString(idea[2])
-                self.generated_keys.append(Idea(idea[0], int(idea[1]), font, keywords))
-            self.all_keys = self.generated_keys + self.added_keys
-
     def write_notes(self):
         self.notes_text.setHtml(self.notes.notes_html)
         self.headLines_text.setHtml(self.notes.headLines_html)
@@ -737,7 +718,6 @@ class MainWindow(QMainWindow):
         self.keywords_text.clear()
 
         for i, key in enumerate(self.all_keys):
-
             self.keywords_text.setCurrentFont(MainWindow.DEFAULT_FONT)
             self.keywords_text.insertPlainText(str(key))
 
@@ -898,7 +878,7 @@ class MainWindow(QMainWindow):
         self.notes.title = title
 
     def keywords_text_focus_out_event(self, event: QFocusEvent):
-        QTextEdit.focusOutEvent(event)
+        QTextEdit.focusOutEvent(self.keywords_text, event)
         self.highlighter.clear_all_selections(False)
 
     def add_key_line_press_event(self, event: QKeyEvent):

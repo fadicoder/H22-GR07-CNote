@@ -33,7 +33,7 @@ def words_matrix(text):
     for phrase in phrases:
         words.append(re.split('[ \\W\\d]+', phrase))
 
-    return words
+    return words, phrases
 
 
 def is_key(word):
@@ -55,7 +55,7 @@ def is_key(word):
     in_dict = True if pos != len(USAGE_DICT) and USAGE_DICT.keys()[pos] == word else False
 
     if in_dict:
-        if USAGE_DICT[word] < 46:
+        if USAGE_DICT[word] <= 50:
             return True
 
     return False
@@ -79,10 +79,12 @@ def get_ideas(text, max_fonts: list, ideas: list, from_to: tuple):
         start = from_to[0]
 
     delete_old_ideas(ideas, from_to, text)
-    words = words_matrix(text)
+    matrix = words_matrix(text)
+    words = matrix[0]
+    phrases = matrix[1]
 
     for i, phrase in enumerate(words):
-        idea = Idea(' '.join(phrase), i + start, max_fonts[i])
+        idea = Idea(phrases[i], i + start, max_fonts[i])
 
         for word in phrase:
 

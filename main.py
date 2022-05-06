@@ -1,7 +1,9 @@
 from gui.window import MainWindow
+from dotenv import load_dotenv
 
 
 def main():
+    load_dotenv()
     window = MainWindow()
     window.launch()
 

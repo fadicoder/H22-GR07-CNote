@@ -1,7 +1,4 @@
 import pickle
-import random
-import string
-
 import easygui
 from PyQt6.QtGui import QFont
 from bs4 import BeautifulSoup

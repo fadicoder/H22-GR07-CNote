@@ -16,7 +16,7 @@ class Idea:
         self.line = line
         if type(max_font) == str:
             self.max_font.fromString(max_font)
-        else :
+        else:
             self.max_font = max_font
 
     def __str__(self):
