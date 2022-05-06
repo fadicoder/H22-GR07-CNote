@@ -2,7 +2,7 @@ from PyQt6.QtCore import QPoint, Qt
 from PyQt6.QtGui import QTextCursor, QColorConstants
 from PyQt6.QtWidgets import QTextEdit, QApplication
 from sortedcontainers import SortedDict
-from gui import cursoroperations as co, Input
+from gui import cursoroperations as co
 from idea import Idea
 
 

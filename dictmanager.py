@@ -3,7 +3,7 @@ import threading
 import re
 from idea import Idea
 
-DICT_PATH = r'dictionary.txt'
+DICT_PATH = 'dictionary.txt'
 USAGE_DICT = SortedDict()
 
 
@@ -55,7 +55,7 @@ def is_key(word):
     in_dict = True if pos != len(USAGE_DICT) and USAGE_DICT.keys()[pos] == word else False
 
     if in_dict:
-        if USAGE_DICT[word] < 40:
+        if USAGE_DICT[word] < 46:
             return True
 
     return False
