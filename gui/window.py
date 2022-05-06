@@ -362,11 +362,12 @@ class MainWindow(QMainWindow):
             self.all_keys = self.generated_keys + self.added_keys
             restorelistgene = attributes_list[3].split("@$?&")
             for restoregene in restorelistgene:
-                idea = restoregene.split("@&&%*****")
-                keywords = idea[3].split(' ')
-                font = QFont()
-                font.fromString(idea[2])
-                self.generated_keys.append(Idea(idea[0], int(idea[1]), font, keywords))
+                if len(restorelistgene)-1 > restoregene:
+                    idea = restoregene.split("@&&%*****")
+                    keywords = idea[3].split(' ')
+                    font = QFont()
+                    font.fromString(idea[2])
+                    self.generated_keys.append(Idea(idea[0], int(idea[1]), font, keywords))
             restorelistad = attributes_list[4].split("@$?&")
             for restoread in restorelistad:
                 idea = restoread.split("@&&%*****")
