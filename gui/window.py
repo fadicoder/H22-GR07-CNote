@@ -1,14 +1,13 @@
 from gui import cursoroperations as co
 from idea import Idea
 from gui.highlighting import HighlightingSystem
-import os
-import sys
-import dictmanager as dm
 from account import Account, Error
 from notes import Notes
+import dictmanager as dm
+import os
+import sys
 
 from PyQt6.QtWidgets import *
-from PyQt6.QtGui import QTextCursor
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import *
 
@@ -18,19 +17,17 @@ from PyQt6.QtGui import *
 - change doc.blockCount() to count(\n)
 
 - generate keys with selection bug
-- sign up page background???
+- sign up page same page???
 - docs
-- remove uncessary things in pages
-- add background
 - translate to french
 
-- repair genrated with diff fonts
-- add options for modifications in account
 - adjust repair
 - highlighting bug
-- disk to cloud
+- test laod and save as
 - create table if not exists
-- vérifier sauvgarde sur disk
+- donc allow up down selection when no selection
+- change to document.defaultFont()
+- do things with selection
 '''
 
 
@@ -301,6 +298,7 @@ class MainWindow(QMainWindow):
         self.create_note_btn = QPushButton('New notes')
         self.notes_combo = QComboBox()
         self.open_selected_notes_btn = QPushButton('Open selected notes')
+        self.load_btn = QPushButton('Load notes from disk')
         self.fill_notes_combo()
 
         layout.addWidget(self.create_note_btn)
@@ -309,6 +307,8 @@ class MainWindow(QMainWindow):
         choose_notes_layout.addWidget(self.open_selected_notes_btn)
         layout.addSpacing(50)
         layout.addLayout(choose_notes_layout)
+        layout.addSpacing(50)
+        layout.addWidget(self.load_btn)
 
         notes_page.addTab(first_tab, "C-Note - " + self.account.username)
 
@@ -316,8 +316,10 @@ class MainWindow(QMainWindow):
         notes_page.currentChanged.connect(self.set_current_tab)
         notes_page.tabCloseRequested.connect(lambda index: self.close_tab(notes_page, index))
         self.open_selected_notes_btn.clicked.connect(lambda: self.create_note())
+        self.load_btn.clicked.connect(lambda: self.create_note(from_disk=True))
 
         self.create_note_btn.setMinimumSize(800, 150)
+        self.load_btn.setMinimumSize(200, 50)
         return notes_page
 
     def __notes_widget(self, index, new_notes):
@@ -667,6 +669,7 @@ class MainWindow(QMainWindow):
     def sign_out(self):
         self.save_every_thing()
         self.account.sign_out()
+        self.notes = None
         self.show_welcome_page()
 
     def save_as(self):
@@ -865,6 +868,7 @@ class MainWindow(QMainWindow):
     def headlines_text_focus_out_event(self, event: QFocusEvent):
         QTextEdit.focusOutEvent(self.headLines_text, event)
 
+        # changer le titre des notes
         headlines = self.headLines_text.toPlainText().split('\n')
         if len(headlines) == 0:
             title = 'Sans titre'
@@ -872,8 +876,10 @@ class MainWindow(QMainWindow):
             title = headlines[0]
             if title.strip() == '':
                 title = 'Sans titre'
+        self.notes.title = title
+        self.fill_notes_combo()
 
-        tab_index = None
+        tab_index = None  # Selection l'objet notes correspondant au tab overt
         for index in self.notes_dict.keys():
             if self.notes_dict[index][0] == self.headLines_text:
                 tab_index = index
@@ -1044,7 +1050,6 @@ class MainWindow(QMainWindow):
             self.generate_empty()
 
         max_fonts = co.get_max_fonts(self.notes_text, from_to)
-
         dm.get_ideas(text, max_fonts, self.generated_keys, from_to)
         self.generated_keys.sort(key=Idea.get_line)
         self.all_keys = self.added_keys + self.generated_keys

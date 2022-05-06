@@ -83,10 +83,10 @@ def get_ideas(text, max_fonts: list, ideas: list, from_to: tuple):
     words = matrix[0]
     phrases = matrix[1]
 
-    for i, phrase in enumerate(words):
+    for i, words_in_phrase in enumerate(words):
         idea = Idea(phrases[i], i + start, max_fonts[i])
 
-        for word in phrase:
+        for word in words_in_phrase:
 
             if is_key(word):
                 idea.add_keyword(word)

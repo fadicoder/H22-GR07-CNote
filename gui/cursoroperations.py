@@ -95,7 +95,7 @@ def get_max_fonts(text, from_to):
         move_cursor_to_line(cursor, start)
         cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock)
 
-    for i in range(start, end):
+    for i in range(start, end+1):
         max_fonts.append(get_max_font_by_line(text, cursor, i, True))
         cursor.movePosition(QTextCursor.MoveOperation.NextBlock)
 

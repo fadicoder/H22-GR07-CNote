@@ -38,6 +38,8 @@ class HighlightingSystem:
 
         if Qt.KeyboardModifier.ShiftModifier in QApplication.keyboardModifiers():
             return
+        if not self.has_selection():
+            return
 
         cursor = self.keys_text.textCursor()
         cursor.setPosition(self.last_highlight_pos)
@@ -54,8 +56,6 @@ class HighlightingSystem:
             return False
 
         pos = cursor.position()
-        if not self.has_selection():
-            pos = HighlightingSystem.__get_first_key_pos(cursor)
 
         if is_possible:
             self.highlight(pos, all_keys)

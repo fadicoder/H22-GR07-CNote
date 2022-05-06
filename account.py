@@ -139,7 +139,7 @@ class Account:
 
         self.cursor.execute(f"CREATE USER '{username}'@'localhost' IDENTIFIED BY '{pwd}';")
         self.cursor.execute(f"GRANT ALL PRIVILEGES ON *.* TO '{username}'@localhost IDENTIFIED BY '{pwd}';")
-        self.cursor.execute(f"CREATE TABLE {username}_cnotes(id VARCHAR(32), body LONGTEXT);")
+        self.cursor.execute(f"CREATE TABLE {username}_cnotes(id VARCHAR(64), body LONGTEXT);")
         self.cursor.execute(f"GRANT ALL PRIVILEGES ON notes TO '{username}'@'localhost';")
         self.cursor.execute(f"GRANT ALL PRIVILEGES ON cnoteserver.{username}_cnotes TO '{username}'@'localhost';")
         self.mydb.commit()

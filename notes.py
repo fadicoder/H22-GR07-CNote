@@ -111,6 +111,11 @@ class Notes:
 
         if self.openedfilebefore == False:
             fileopened = easygui.filesavebox()
+            if fileopened is None:
+                return
+            self.fileopenned = fileopened
+            self.openedfilebefore = True
+        if self.fileopenned != None:
             self.fileopenned = fileopened
             self.openedfilebefore = True
         if self.fileopenned != None:
@@ -121,12 +126,12 @@ class Notes:
         openededbeforetemp = None
         fileoptemp = None
         if saveas == 1:
-            openededbeforetemp = Notes.openedfilebefore
-            fileoptemp = Notes.fileopenned
+            openededbeforetemp = self.openedfilebefore
+            fileoptemp = self.fileopenned
 
         if saveas == 1:
-            Notes.openedfilebefore = openededbeforetemp
-            Notes.fileopenned = fileoptemp
+            self.openedfilebefore = openededbeforetemp
+            self.fileopenned = fileoptemp
 
     def save_on_disk_docx(self, maintxt, sumtxt, headtxt, genekeys, adkeys):  # sauvegarde le document en format docx
 
@@ -157,4 +162,3 @@ class Notes:
             return Notes(account, notes_info=txtsl)
         else:
             return None
-
