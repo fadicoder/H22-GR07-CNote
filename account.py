@@ -4,6 +4,7 @@ import random
 import mysql.connector
 import re
 from notes import Notes
+from os import getenv
 
 
 class Error(enum.Enum):
@@ -37,19 +38,16 @@ class Error(enum.Enum):
         if self == self.Already_Taken_Username:
             return "Le nom d'utilisateur est déjà pris"
         if self == self.Connection_Error:
-            return "Erreur de connection à mysql. \nVeuillez vérifier la valeur de HOST dans account.py"
+            return "Erreur de connection à mysql. \nVeuillez vérifier la valeur de HOST dans .env"
         if self == self.Same_Username:
             return "Le nouveau nom d'utilisateur est identique à l'ancien"
         if self == self.Prohibited_Chars_User:
-            return "Le nom d'utilisateur ne peut pas contenir les catactères:\n @, *, ^, \", ', \\, /, (, ) ou espace"
+            return "Le nom d'utilisateur ne peut pas contenir les caractères:\n @, *, ^, \", ', \\, /, (, ) ou espace"
         if self == self.Prohibited_Chars_Pwd:
-            return "Le mot de passe ne peut pas contenir les catactères:\n @, *, ^, \", ', \\, /, (, ) ou espace"
+            return "Le mot de passe ne peut pas contenir les caractères:\n @, *, ^, \", ', \\, /, (, ) ou espace"
         if self == self.Confirm_Pwd_Error:
             return "La confirmation du mot de passe est erronée"
         return 'Erreur inconnue: \nVeuillez contacter le soutien technique'
-
-
-HOST = 'localhost'
 
 
 class Account:
@@ -71,8 +69,8 @@ class Account:
         self.error = Error.No_Error
 
         try:
-            self.mydb = mysql.connector.connect(user='root', password='root', host=HOST, port=3306,
-                                                database="CNoteServer")
+            self.mydb = mysql.connector.connect(user=getenv('USERNAME'), password=getenv('PASSWORD'),
+                                                host=getenv('Host'), port=3306, database="CNoteServer")
         except mysql.connector.errors.DatabaseError:
             self.error = Error.Connection_Error
             return
@@ -86,7 +84,8 @@ class Account:
 
     def log_in(self, username: str, pwd: str) -> bool:
         try:
-            self.mydb = mysql.connector.connect(user=username, passwd=pwd, host=HOST, port=3306, database="CNoteServer")
+            self.mydb = mysql.connector.connect(user=username, passwd=pwd, host=getenv('Host'),
+                                                port=3306, database="CNoteServer")
             self.cursor = self.mydb.cursor()
             self.error = Error.No_Error
             self.username = username
@@ -158,7 +157,7 @@ class Account:
 
     def upload_notes(self, notes, notes_info: str):
 
-        if self.username == '':  # Si il n'y a pas de nom d'utilisateur, le compte est déconnecté
+        if self.username == '':  # S'il n'y a pas de nom d'utilisateur, le compte est déconnecté
             return
 
         notes_info = notes_info.replace("'", r"\'")
@@ -217,7 +216,7 @@ class Account:
         if re.search(Account.PROHIBITED_SYMBOLS, new_pwd) is not None:
             self.error = Error.Prohibited_Chars_Pwd
             return False
-        self.cursor.execute(f"ALTER USER '{self.username}'@'{HOST}' IDENTIFIED BY '{new_pwd}';")
+        self.cursor.execute(f"ALTER USER '{self.username}'@'localhost' IDENTIFIED BY '{new_pwd}';")
         self.password = new_pwd
         return True
 
