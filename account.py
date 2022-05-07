@@ -9,28 +9,34 @@ from os import getenv
 
 class Error(enum.Enum):
     No_Error = 0
-    Pwd_Not_Matched = 1
-    Pwd_Too_Short = 2
-    Pwd_Too_Long = 3
-    Confirm_Pwd_Error = 4
-    Invalid_Pwd = 5
-    Username_Too_Short = 6
-    Username_Too_Long = 7
-    Same_Username = 8
-    Already_Taken_Username = 9
-    Prohibited_Chars_User = 10
-    Prohibited_Chars_Pwd = 11
-    Connection_Error = 12
+    Pwd_Empty = 1
+    Pwd_Not_Matched = 2
+    Pwd_Too_Short = 3
+    Pwd_Too_Long = 4
+    Confirm_Pwd_Error = 5
+    Invalid_Pwd = 6
+    Username_Empty = 7
+    Username_Too_Short = 8
+    Username_Too_Long = 9
+    Same_Username = 10
+    Already_Taken_Username = 11
+    Prohibited_Chars_User = 12
+    Prohibited_Chars_Pwd = 13
+    Connection_Error = 14
 
     def get_desc(self):
         if self == self.No_Error:
             return ''
         if self == self.Pwd_Not_Matched:
             return "Nom d'utilisateur ou mot de passe invalide"
+        if self == self.Pwd_Empty:
+            return 'Veuillez entrer un mot de passe'
         if self == self.Pwd_Too_Short:
             return 'Le mot de passe doit contenir au moins 8 caractères'
         if self == self.Pwd_Too_Long:
             return "Le mot de passe ne doit pas dépasser 30 caractères"
+        if self == self.Username_Empty:
+            return "Veuillez entrer un nom d'utilisateur"
         if self == self.Username_Too_Short:
             return "Le nom d'utilisateur doit contenir au moins 8 caractères"
         if self == self.Username_Too_Long:
@@ -83,6 +89,15 @@ class Account:
         return error_desc
 
     def log_in(self, username: str, pwd: str) -> bool:
+
+        if len(username) == 0:
+            self.error = Error.Username_Empty
+            return False
+
+        if len(pwd) == 0:
+            self.error = Error.Pwd_Empty
+            return False
+
         try:
             self.mydb = mysql.connector.connect(user=username, passwd=pwd, host=getenv('Host'),
                                                 port=3306, database="CNoteServer")
@@ -98,6 +113,17 @@ class Account:
             self.error = Error.Connection_Error
             return False
 
+
+        # vérifier que le tableau des données exsist
+        self.cursor.execute(f"SELECT EXISTS (SELECT TABLE_NAME FROM information_schema.TABLES "
+                            f"WHERE TABLE_NAME = '{username}_cnotes');")
+        if self.cursor.fetchone()[0] == 0:  # Si pour une raison x le tableau n'est plus la, il faut le recréer
+            self.cursor.execute(f"CREATE TABLE {username}_cnotes(id VARCHAR(32), body LONGTEXT);")
+            self.cursor.execute(f"GRANT ALL PRIVILEGES ON cnoteserver.{username}_cnotes TO '{username}'@'localhost';")
+            self.mydb.commit()
+
+
+        # lire les données dans le tableau
         self.cursor.execute(f"SELECT id, body FROM cnoteserver.{username}_cnotes;")
         for element in self.cursor.fetchall():
             self.notes_lst.append(Notes(identification=element[0], account=self, notes_info=element[1]))
@@ -105,6 +131,14 @@ class Account:
         return True
 
     def sign_up(self, username: str, pwd: str):
+
+        if len(username) == 0:
+            self.error = Error.Username_Empty
+            return False
+
+        if len(pwd) == 0:
+            self.error = Error.Pwd_Empty
+            return False
 
         if len(username) < 8:
             self.error = Error.Username_Too_Short
@@ -139,7 +173,7 @@ class Account:
 
         self.cursor.execute(f"CREATE USER '{username}'@'localhost' IDENTIFIED BY '{pwd}';")
         self.cursor.execute(f"GRANT ALL PRIVILEGES ON *.* TO '{username}'@localhost IDENTIFIED BY '{pwd}';")
-        self.cursor.execute(f"CREATE TABLE {username}_cnotes(id VARCHAR(64), body LONGTEXT);")
+        self.cursor.execute(f"CREATE TABLE {username}_cnotes(id VARCHAR(32), body LONGTEXT);")
         self.cursor.execute(f"GRANT ALL PRIVILEGES ON notes TO '{username}'@'localhost';")
         self.cursor.execute(f"GRANT ALL PRIVILEGES ON cnoteserver.{username}_cnotes TO '{username}'@'localhost';")
         self.mydb.commit()
@@ -172,10 +206,25 @@ class Account:
         self.cursor.execute(sql)
         self.mydb.commit()
 
+    def delete_notes(self, notes):
+        if self.username == '':  # S'il n'y a pas de nom d'utilisateur, le compte est déconnecté
+            return
+        if notes not in self.notes_lst:
+            return
+
+        self.cursor.execute(f"DELETE FROM qwerqwer_cnotes WHERE id = '{notes.id}';")
+        self.notes_lst.remove(notes)
+        self.mydb.commit()
+
     def change_username(self, new_username):
         if self.username == '':
             self.error = Error.Connection_Error
             return False
+
+        if len(new_username) == 0:
+            self.error = Error.Username_Empty
+            return False
+
         if len(new_username) < 8:
             self.error = Error.Username_Too_Short
             return False
@@ -195,11 +244,15 @@ class Account:
         self.cursor.execute(f"RENAME USER '{self.username}'@'localhost' TO '{new_username}'@'localhost';")
         self.cursor.execute(f"ALTER TABLE {self.username}_cnotes RENAME TO {new_username}_cnotes;")
         self.username = new_username
+        self.mydb.commit()
         return True
 
     def change_password(self, old_pwd, new_pwd, confirm_new_pwd):
         if self.username == '':
             self.error = Error.Connection_Error
+            return False
+        if len(new_pwd) == 0 or len(old_pwd) == 0:
+            self.error = Error.Pwd_Empty
             return False
         if self.password != old_pwd:
             self.error = Error.Invalid_Pwd
@@ -218,6 +271,7 @@ class Account:
             return False
         self.cursor.execute(f"ALTER USER '{self.username}'@'localhost' IDENTIFIED BY '{new_pwd}';")
         self.password = new_pwd
+        self.mydb.commit()
         return True
 
     def is_used_username(self, username):
@@ -237,5 +291,8 @@ class Account:
     def generate_id(self):
         identification = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
         while self.is_used_id(identification):
-            identification = ' '.join(random.choices(string.ascii_letters, k=32))
+            identification = ''.join(random.choices(string.ascii_letters, k=32))
         return identification
+
+    def is_signed_out(self):
+        return self.username == ''

@@ -10,16 +10,14 @@ from idea import Idea
 
 class Notes:
 
-    def __init__(self, identification=None, account=None, notes_info=None, title=None):
+    def __init__(self, identification=None, account=None, notes_info=None, title=None, file=None):
 
-        self.openedfilebefore = False
-        self.fileopenned = None
+        self.fileopenned = file
         self.id = identification
         self.added_keys = list()
         self.generated_keys = list()
 
         if identification is None:
-
             self.id = account.generate_id()
 
         if notes_info is None:
@@ -109,21 +107,18 @@ class Notes:
 
         txtsl = ''
 
-        if self.openedfilebefore == False:
+        if self.fileopenned is None or saveas:
             fileopened = easygui.filesavebox()
             if fileopened is None:
                 return
             self.fileopenned = fileopened
-            self.openedfilebefore = True
-        if self.fileopenned != None:
-            self.fileopenned = fileopened
-            self.openedfilebefore = True
-        if self.fileopenned != None:
+
+        else:
             txtsl = self.get_notes_info(maintxt, sumtxt, headtxt, genekeys, adkeys)
 
         pickle.dump(txtsl, open(self.fileopenned, "wb"))  # sauvegarde le document
 
-        openededbeforetemp = None
+        '''        openededbeforetemp = None
         fileoptemp = None
         if saveas == 1:
             openededbeforetemp = self.openedfilebefore
@@ -131,7 +126,7 @@ class Notes:
 
         if saveas == 1:
             self.openedfilebefore = openededbeforetemp
-            self.fileopenned = fileoptemp
+            self.fileopenned = fileoptemp'''
 
     def save_on_disk_docx(self, maintxt, sumtxt, headtxt, genekeys, adkeys):  # sauvegarde le document en format docx
 
@@ -154,11 +149,10 @@ class Notes:
     def notesload(account):
 
         filetoopen = easygui.fileopenbox()
-        Notes.fileopenned = filetoopen
-        if Notes.fileopenned != None:
-            Notes.openedfilebefore = True
-            txtsl = pickle.load(open(Notes.fileopenned, "rb"))
-
-            return Notes(account, notes_info=txtsl)
-        else:
+        if filetoopen is None:
             return None
+
+        txtsl = pickle.load(open(filetoopen, "rb"))
+        notes = Notes(account, notes_info=txtsl, file=filetoopen)
+
+        return notes

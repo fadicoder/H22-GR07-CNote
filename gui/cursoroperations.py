@@ -24,7 +24,7 @@ def move_cursor_to_line(cursor: QTextCursor, line: int):
 
 
 def get_start_of_phrase(cursor: QTextCursor, phrase: str, start_line: int):
-    if cursor.document().blockCount() - 1 < start_line:
+    if cursor.document().toPlainText().count('\n') - 1 < start_line:
         return
 
     move_cursor_to_line(cursor, start_line)
@@ -66,7 +66,7 @@ def get_max_font_by_line(text, cursor, i: int, cursor_on_line: bool):
         cursor.movePosition(QTextCursor.MoveOperation.NextCharacter)
         text.setTextCursor(cursor)
         current_font = text.currentFont()
-        if current_font > max_font:
+        if current_font.pointSize() > max_font.pointSize():
             max_font = current_font
 
     return max_font

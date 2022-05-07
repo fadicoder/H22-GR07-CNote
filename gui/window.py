@@ -12,22 +12,8 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import *
 
 '''
-- extract
-- delete 1 selected idea + with no phrase
-- change doc.blockCount() to count(\n)
-
-- generate keys with selection bug
-- sign up page same page???
-- docs
-- translate to french
-
-- adjust repair
-- highlighting bug
 - test laod and save as
-- create table if not exists
-- donc allow up down selection when no selection
-- change to document.defaultFont()
-- do things with selection
+- veuillez entrer nom utilisateur ou mot de passe
 '''
 
 
@@ -42,6 +28,7 @@ class MainWindow(QMainWindow):
         self.keywords_text = None
         self.headLines_text = None
         self.notes = None
+        self.notes_dict = dict()
         self.account = Account()
 
         self.app = QApplication(sys.argv)
@@ -49,7 +36,6 @@ class MainWindow(QMainWindow):
         self.widgets_lst = QStackedWidget()
         self.setCentralWidget(self.widgets_lst)
         self.setWindowTitle("C-Note")
-        self.notes_dict = dict()
 
         self.notes_page = self.__notes_page()
         self.welcome_widget = self.__welcome_page()
@@ -64,10 +50,10 @@ class MainWindow(QMainWindow):
         self.menubar.setVisible(False)
         self.setMenuBar(self.menubar)
 
-        self.main_toolbar = QToolBar()
+        self.toolbar = QToolBar()
         self.__init_toolbar()
-        self.main_toolbar.setVisible(False)
-        self.addToolBar(self.main_toolbar)
+        self.toolbar.setVisible(False)
+        self.addToolBar(self.toolbar)
 
         self.generated_keys = []
         self.added_keys = []
@@ -78,66 +64,60 @@ class MainWindow(QMainWindow):
         """
         Initialise les éléments de la bare de menu.
         """
-        save_act = QAction('Save', self)
+        save_act = QAction('Sauvegarder', self)
         save_act.setShortcut('Ctrl+S')
-        save_act.setStatusTip('Saving...')
         save_act.triggered.connect(self.save)
 
-        save_as_act = QAction('Save as', self)
+        save_as_act = QAction('Sauvegarder sous', self)
         save_as_act.setShortcut('Ctrl+Shift+S')
-        save_as_act.setStatusTip('Saving...')
         save_as_act.triggered.connect(self.save_as)
 
-        save_on_cloud_act = QAction('Save on cloud', self)
+        save_on_cloud_act = QAction('Sauvegarder dans le compte', self)
         save_on_cloud_act.triggered.connect(lambda: self.save_on_cloud(True))
 
-        load_act = QAction('Load', self)
+        load_act = QAction('Charger', self)
         load_act.setShortcut('Ctrl+L')
         load_act.triggered.connect(lambda: self.create_note(from_disk=True))
 
-        export_docs_act = QAction('Export to .docx', self)
+        export_docs_act = QAction('Exporter vers .docx', self)
         export_docs_act.triggered.connect(self.save_on_disk_docx)
 
-        self.clear_text_act = QAction('Clear all notes', self)
+        self.clear_text_act = QAction('Effacer toutes les notes', self)
         self.clear_text_act.triggered.connect(self.clear_notes)
 
-        sign_out_act = QAction('Sign out', self)
+        sign_out_act = QAction('Déconnection', self)
         sign_out_act.triggered.connect(self.sign_out)
 
-        exit_act = QAction('Save and exit', self)
+        exit_act = QAction('Sauvgarder et quitter', self)
         exit_act.setShortcut('Ctrl+Q')
         exit_act.triggered.connect(self.closeEvent)
 
-        edit_username_act = QAction('Edit username', self)
+        edit_username_act = QAction("Modifier le nom d'utilisateur", self)
         edit_username_act.triggered.connect(self.prompt_username)
-        edit_pwd_act = QAction('Edit password', self)
+        edit_pwd_act = QAction('Modifier le nom de passe', self)
         edit_pwd_act.triggered.connect(self.prompt_password)
 
-        adjust_keys_act = QAction('Adjust keywords with text', self)
-        adjust_keys_act.setShortcut('F5')
-        adjust_keys_act.triggered.connect(self.adjust_keys_with_notes)
-
-        insert_image_act = QAction('Insert image', self)
+        insert_image_act = QAction('Insérer une image', self)
         insert_image_act.triggered.connect(self.insert_image)
 
-        generate_act = QAction('Generate keywords', self)
+        generate_act = QAction('Générer des mots-clés', self)
         generate_act.setShortcut('Ctrl+G')
         generate_act.triggered.connect(self.generate)
-        clear_gen_keys_act = QAction('Clear generated keywords', self)
+        clear_gen_keys_act = QAction('Effacer les mots-clés générés', self)
         clear_gen_keys_act.triggered.connect(self.clear_gen_keys)
-        clear_added_keys_act = QAction('Clear added keywords', self)
+        clear_added_keys_act = QAction('Effacer les mots-clés ajoutés', self)
         clear_added_keys_act.triggered.connect(self.clear_added_keys)
-        clear_all_keys_act = QAction('Clear all keywords', self)
+        clear_all_keys_act = QAction('Effacer tous les mots-clés', self)
         clear_all_keys_act.triggered.connect(self.clear_all_keys)
 
-        account_menu = self.menubar.addMenu('Account')
+        account_menu = self.menubar.addMenu('Compte')
         account_menu.addAction(edit_username_act)
         account_menu.addAction(edit_pwd_act)
         account_menu.addSeparator()
         account_menu.addAction(sign_out_act)
         account_menu.addAction(exit_act)
 
-        self.file_menu = self.menubar.addMenu('File')
+        self.file_menu = self.menubar.addMenu('Fichier')
         self.file_menu.addAction(save_act)
         self.file_menu.addAction(save_as_act)
         self.file_menu.addAction(save_on_cloud_act)
@@ -148,15 +128,14 @@ class MainWindow(QMainWindow):
         self.file_menu.addAction(self.clear_text_act)
 
 
-        self.insert_menu = self.menubar.addMenu('Insert')
+        self.insert_menu = self.menubar.addMenu('Insérer')
         self.insert_menu.addAction(insert_image_act)
 
-        self.keywords_menu = self.menubar.addMenu('Keywords')
+        self.keywords_menu = self.menubar.addMenu('Mots-clés')
         self.keywords_menu.addAction(generate_act)
         self.keywords_menu.addSeparator()
         self.keywords_menu.addActions([clear_added_keys_act, clear_gen_keys_act, clear_all_keys_act])
-        self.keywords_menu.addSeparator()
-        self.keywords_menu.addAction(adjust_keys_act)
+
     def save_on_disk_docx(self):
         sumtext = self.summery_text.toHtml()
         headtext = self.headLines_text.toHtml()
@@ -164,33 +143,34 @@ class MainWindow(QMainWindow):
         genekeys = self.generated_keys
         adkeys = self.added_keys
         self.notes.save_on_disk_docx(maintext, sumtext, headtext, genekeys, adkeys)
+
     def __init_toolbar(self):
 
         self.keyword_line = QLineEdit()
         self.keyword_line.setMaximumWidth(250)
-        self.keyword_line.setPlaceholderText('Add keyword')
+        self.keyword_line.setPlaceholderText('Ajouter un mot-clé')
         self.keyword_line.setAcceptDrops(False)
         self.keyword_line.keyPressEvent = self.add_key_line_press_event
 
         self.size_spin = QSpinBox()
         self.size_spin.setValue(MainWindow.DEFAULT_FONT.pointSize())
-        self.size_spin.valueChanged.connect(lambda: self.last_text.setFontPointSize(self.size_spin.value()))
+        self.size_spin.valueChanged.connect(lambda size: self.last_text.setFontPointSize(size))
 
         self.font_combo = QFontComboBox()
         self.font_combo.setCurrentFont(MainWindow.DEFAULT_FONT)
-        self.font_combo.currentFontChanged.connect(
-            lambda: self.last_text.setFontFamily(self.font_combo.currentFont().family()))
+        self.font_combo.setEditable(False)
+        self.font_combo.currentFontChanged.connect(lambda font: self.last_text.setFontFamily(font.family()))
 
-        align_left_act = QAction(QIcon('resources/AlignLeft.png'), 'Align left', self)
-        align_center_act = QAction(QIcon('resources/AlignCenter.png'), 'Align center', self)
-        align_right_act = QAction(QIcon('resources/AlignRight.png'), 'Align right', self)
+        align_left_act = QAction(QIcon('resources/AlignLeft.png'), 'Aligner gauche', self)
+        align_center_act = QAction(QIcon('resources/AlignCenter.png'), 'Aligner centre', self)
+        align_right_act = QAction(QIcon('resources/AlignRight.png'), 'Aligner droite', self)
         align_left_act.triggered.connect(lambda: self.last_text.setAlignment(Qt.AlignmentFlag.AlignLeft))
         align_center_act.triggered.connect(lambda: self.last_text.setAlignment(Qt.AlignmentFlag.AlignCenter))
         align_right_act.triggered.connect(lambda: self.last_text.setAlignment(Qt.AlignmentFlag.AlignRight))
 
-        self.bold_act = QAction(QIcon('resources/Bold.png'), 'Bold text', self)
-        self.italic_act = QAction(QIcon('resources/Italic.png'), 'Italic text', self)
-        self.underline_act = QAction(QIcon('resources/Underline.png'), 'Underline text', self)
+        self.bold_act = QAction(QIcon('resources/Bold.png'), 'Texte gras', self)
+        self.italic_act = QAction(QIcon('resources/Italic.png'), 'Texte italique', self)
+        self.underline_act = QAction(QIcon('resources/Underline.png'), 'Texte souligné', self)
         self.bold_act.setCheckable(True)
         self.italic_act.setCheckable(True)
         self.underline_act.setCheckable(True)
@@ -209,30 +189,28 @@ class MainWindow(QMainWindow):
         highlight_pixmap.fill(self.highlight_color)
         text_color_pixmap = QPixmap(100, 100)
         text_color_pixmap.fill(self.text_color)
-        self.highlight_act = QAction(QIcon('resources/Highlight.png'), 'Highlight', self)
-        self.highlight_color_picker_act = QAction(QIcon(highlight_pixmap), 'Highlighter color picker', self)
-        self.text_color_act = QAction(QIcon('resources/TextColor.png'), 'Color Text', self)
-        self.text_color_picker_act = QAction(QIcon(text_color_pixmap), 'Text color picker', self)
+        self.highlight_act = QAction(QIcon('resources/Highlight.png'), 'Surligner', self)
+        self.highlight_color_picker_act = QAction(QIcon(highlight_pixmap), 'Couleur de surlignage', self)
+        self.text_color_act = QAction(QIcon('resources/TextColor.png'), 'Colorer le texte', self)
+        self.text_color_picker_act = QAction(QIcon(text_color_pixmap), 'Couleur de texte', self)
         self.highlight_color_picker_act.triggered.connect(lambda: self.select_color(True))
         self.text_color_picker_act.triggered.connect(lambda: self.select_color(False))
         self.highlight_act.triggered.connect(lambda: self.color(True))
         self.text_color_act.triggered.connect(lambda: self.color(False))
 
-        self.main_toolbar.setStyleSheet("QToolBar{spacing:45px;}")
-        self.main_toolbar.addWidget(self.keyword_line)
-        self.main_toolbar.addSeparator()
-        self.main_toolbar.addWidget(self.font_combo)
-        self.main_toolbar.addWidget(self.size_spin)
-        self.main_toolbar.addSeparator()
-        self.main_toolbar.addActions([align_left_act, align_center_act, align_right_act])
-        self.main_toolbar.addSeparator()
-        self.main_toolbar.addActions([self.bold_act, self.italic_act, self.underline_act])
-        self.main_toolbar.addSeparator()
-        self.main_toolbar.addActions([self.highlight_act, self.highlight_color_picker_act])
-        self.main_toolbar.addSeparator()
-        self.main_toolbar.addActions(([self.text_color_act, self.text_color_picker_act]))
-
-        # self.notes_highlighter.highlightBlock(self.notes_text.textCursor().selection().toPlainText()))
+        self.toolbar.setStyleSheet("QToolBar{spacing:45px;}")
+        self.toolbar.addWidget(self.keyword_line)
+        self.toolbar.addSeparator()
+        self.toolbar.addWidget(self.font_combo)
+        self.toolbar.addWidget(self.size_spin)
+        self.toolbar.addSeparator()
+        self.toolbar.addActions([align_left_act, align_center_act, align_right_act])
+        self.toolbar.addSeparator()
+        self.toolbar.addActions([self.bold_act, self.italic_act, self.underline_act])
+        self.toolbar.addSeparator()
+        self.toolbar.addActions([self.highlight_act, self.highlight_color_picker_act])
+        self.toolbar.addSeparator()
+        self.toolbar.addActions(([self.text_color_act, self.text_color_picker_act]))
 
     def __welcome_page(self):
         """
@@ -246,8 +224,8 @@ class MainWindow(QMainWindow):
         # Initialise les widgets
         self.username_input = QLineEdit()
         self.password_input = QLineEdit()
-        self.login_btn = QPushButton('Log in')
-        self.signup_btn = QPushButton('Sign up')
+        self.login_btn = QPushButton('Connection')
+        self.signup_btn = QPushButton('Inscription')
         self.error_label = QLabel()
         self.__welcome_page_properties()
 
@@ -275,10 +253,10 @@ class MainWindow(QMainWindow):
         """
         Cette méthode établit les propriétés des widgets de bienvenue.
         """
-        self.username_input.setPlaceholderText('Username')
+        self.username_input.setPlaceholderText("Nom d'utilisateur")
         self.username_input.setFont(MainWindow.DEFAULT_FONT)
         self.username_input.setMaximumWidth(400)
-        self.password_input.setPlaceholderText('Password')
+        self.password_input.setPlaceholderText('Mot de passe')
         self.password_input.setFont(MainWindow.DEFAULT_FONT)
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
         self.password_input.setMaximumWidth(400)
@@ -295,31 +273,39 @@ class MainWindow(QMainWindow):
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         notes_page.setTabsClosable(True)
 
-        self.create_note_btn = QPushButton('New notes')
+        create_note_btn = QPushButton('Nouvelles notes')
         self.notes_combo = QComboBox()
-        self.open_selected_notes_btn = QPushButton('Open selected notes')
-        self.load_btn = QPushButton('Load notes from disk')
+        open_selected_notes_btn = QPushButton('Ouvrir les notes selectionnées')
+        delete_notes_btn = QPushButton('Supprimer les notes sélectionnées')
+        load_btn = QPushButton('Charger des notes du disk')
         self.fill_notes_combo()
 
-        layout.addWidget(self.create_note_btn)
+        layout.addWidget(create_note_btn)
         choose_notes_layout = QHBoxLayout()
         choose_notes_layout.addWidget(self.notes_combo)
-        choose_notes_layout.addWidget(self.open_selected_notes_btn)
+        btns_layout = QVBoxLayout()
+        btns_layout.addWidget(open_selected_notes_btn)
+        btns_layout.addWidget(delete_notes_btn)
+        choose_notes_layout.addLayout(btns_layout)
         layout.addSpacing(50)
         layout.addLayout(choose_notes_layout)
         layout.addSpacing(50)
-        layout.addWidget(self.load_btn)
+        layout.addWidget(load_btn)
 
         notes_page.addTab(first_tab, "C-Note - " + self.account.username)
 
-        self.create_note_btn.clicked.connect(self.prompt_title)
+        create_note_btn.clicked.connect(self.prompt_title)
         notes_page.currentChanged.connect(self.set_current_tab)
-        notes_page.tabCloseRequested.connect(lambda index: self.close_tab(notes_page, index))
-        self.open_selected_notes_btn.clicked.connect(lambda: self.create_note())
-        self.load_btn.clicked.connect(lambda: self.create_note(from_disk=True))
+        notes_page.tabCloseRequested.connect(lambda index: self.close_tab(index, notes_page))
+        open_selected_notes_btn.clicked.connect(lambda: self.create_note())
+        delete_notes_btn.clicked.connect(self.delete_selected_notes)
+        load_btn.clicked.connect(lambda: self.create_note(from_disk=True))
 
-        self.create_note_btn.setMinimumSize(800, 150)
-        self.load_btn.setMinimumSize(200, 50)
+
+        create_note_btn.setMinimumSize(500, 60)
+        load_btn.setMinimumHeight(60)
+
+
         return notes_page
 
     def __notes_widget(self, index, new_notes):
@@ -362,6 +348,10 @@ class MainWindow(QMainWindow):
         """
         Initialise les propriétés des widgets de notes
         """
+        self.headLines_text.document().setDefaultFont(MainWindow.DEFAULT_FONT)
+        self.notes_text.document().setDefaultFont(MainWindow.DEFAULT_FONT)
+        self.keywords_text.document().setDefaultFont(MainWindow.DEFAULT_FONT)
+        self.summery_text.document().setDefaultFont(MainWindow.DEFAULT_FONT)
 
         self.headLines_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -372,17 +362,13 @@ class MainWindow(QMainWindow):
             self.headLines_text.insertPlainText(self.notes.title + '\n')
             self.headLines_text.setCurrentFont(MainWindow.DEFAULT_FONT)
             self.headLines_text.insertPlainText('auteur: ' + self.account.username + '\n')
+            self.headLines_text.setCurrentFont(MainWindow.DEFAULT_FONT)
         else:
             self.write_notes()
 
-        self.headLines_text.setCurrentFont(MainWindow.DEFAULT_FONT)
-        self.notes_text.setCurrentFont(MainWindow.DEFAULT_FONT)
-        self.keywords_text.setCurrentFont(MainWindow.DEFAULT_FONT)
-        self.summery_text.setCurrentFont(MainWindow.DEFAULT_FONT)
-
-        self.headLines_text.setPlaceholderText('Write your headlines here...')
-        self.notes_text.setPlaceholderText('Write your notes here...')
-        self.summery_text.setPlaceholderText('Write your summery here...')
+        self.headLines_text.setPlaceholderText('Écrivez votre titre ici...')
+        self.notes_text.setPlaceholderText('Écrivez vos notes ici...')
+        self.summery_text.setPlaceholderText('Écrivez votre résumé ici')
 
         self.headLines_text.setMaximumHeight(100)
         self.summery_text.setMaximumHeight(150)
@@ -425,7 +411,7 @@ class MainWindow(QMainWindow):
 
     def show_welcome_page(self):
         self.menubar.setVisible(False)
-        self.main_toolbar.setVisible(False)
+        self.toolbar.setVisible(False)
         self.widgets_lst.setCurrentWidget(self.welcome_widget)
         self.error_label.setText('')
         self.username_input.setFocus()
@@ -452,15 +438,27 @@ class MainWindow(QMainWindow):
 
         self.notes_page.setTabText(tab_index, self.notes.title)
 
-    def close_tab(self, notes_page, tab_index):
+    def delete_selected_notes(self):
+        notes = self.notes_combo.currentData()
+        for tab_index in self.notes_dict.keys():
+            if self.notes_dict[tab_index][4] == notes:
+                self.close_tab(tab_index, save=False)
+
+        self.account.delete_notes(notes)
+        self.fill_notes_combo()
+
+    def close_tab(self, tab_index, notes_page=None, save=True):
 
         if tab_index == 0:  # fermer 1er tab = sign out
             self.sign_out()
             return
 
+        if notes_page is None:
+            notes_page = self.notes_page
+
         notes_page.removeTab(tab_index)
 
-        self.save_on_cloud(True)
+        self.save_on_cloud(True) if save else None  # sauvegarder si exigé
 
         notes_to_shift = dict()
 
@@ -483,7 +481,7 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(QLabel('Veuillez choisir un titre aux notes:'))
         notes_title_line = QLineEdit()
-        submit_btn = QPushButton('Create notes')
+        submit_btn = QPushButton('Créer les notes')
 
         def submit_event():
             self.create_note(notes_title_line.text().strip())
@@ -508,17 +506,17 @@ class MainWindow(QMainWindow):
 
     def prompt_username(self):
         widget = QWidget()
-        widget.setWindowTitle('Change username')
+        widget.setWindowTitle("Nom d'utilisateur")
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         widget.setLayout(layout)
         widget.resize(250, 150)
 
-        username_label = QLabel('Enter new username: ')
+        username_label = QLabel("Entrer le nouveau nom d'utilisateur: ")
         new_user_line = QLineEdit()
         error_label = QLabel()
         error_label.setStyleSheet('color: red')
-        submit_username_btn = QPushButton('rename username')
+        submit_username_btn = QPushButton('Renommer')
 
         def change_username():
             operation_successful = self.account.change_username(new_user_line.text())
@@ -545,7 +543,7 @@ class MainWindow(QMainWindow):
 
     def prompt_password(self):
         widget = QWidget()
-        widget.setWindowTitle('Change password')
+        widget.setWindowTitle('Mot de passe')
         widget.resize(250, 150)
 
         layout = QVBoxLayout()
@@ -556,9 +554,9 @@ class MainWindow(QMainWindow):
         new_pwd_line = QLineEdit()
         confirm_pwd_line = QLineEdit()
 
-        old_pwd_line.setPlaceholderText('Old password')
-        new_pwd_line.setPlaceholderText('New password')
-        confirm_pwd_line.setPlaceholderText('Confirm password')
+        old_pwd_line.setPlaceholderText('Ancien mot de passe')
+        new_pwd_line.setPlaceholderText('Nouveau mot de passe')
+        confirm_pwd_line.setPlaceholderText('Confirmer le mot de passe')
 
         old_pwd_line.setEchoMode(QLineEdit.EchoMode.Password)
         new_pwd_line.setEchoMode(QLineEdit.EchoMode.Password)
@@ -566,7 +564,7 @@ class MainWindow(QMainWindow):
 
         error_label = QLabel()
         error_label.setStyleSheet('color: red')
-        submit_pwd_btn = QPushButton('Change password')
+        submit_pwd_btn = QPushButton('Changer le mot de passe')
 
         widget.show()
 
@@ -618,7 +616,7 @@ class MainWindow(QMainWindow):
         self.highlighter.clear_all_selections(False)
 
     def set_visible_editing_tools(self, visible):
-        self.main_toolbar.setVisible(visible)
+        self.toolbar.setVisible(visible)
         self.keywords_menu.setEnabled(visible)
         self.file_menu.setEnabled(visible)
         self.insert_menu.setEnabled(visible)
@@ -667,9 +665,12 @@ class MainWindow(QMainWindow):
             self.show_error()
 
     def sign_out(self):
-        self.save_every_thing()
+        if self.account.is_signed_out():
+            return
+        self.save_every_thing(close_everything=True)
         self.account.sign_out()
         self.notes = None
+        self.notes_dict.clear()
         self.show_welcome_page()
 
     def save_as(self):
@@ -753,12 +754,13 @@ class MainWindow(QMainWindow):
         pour le widget actuel.
         """
 
-        current_font = text.currentFont()
-        self.font_combo.setCurrentFont(current_font)
-        self.size_spin.setValue(current_font.pointSize())
-        self.bold_act.setChecked(current_font.bold())
-        self.italic_act.setChecked(current_font.italic())
-        self.underline_act.setChecked(current_font.underline())
+        if not text.textCursor().hasSelection():  # Ne pas mettre ajour les information du texte s'il y a une selection
+            current_font = text.currentFont()
+            self.font_combo.setCurrentFont(current_font)
+            self.size_spin.setValue(current_font.pointSize())
+            self.bold_act.setChecked(current_font.bold())
+            self.italic_act.setChecked(current_font.italic())
+            self.underline_act.setChecked(current_font.underline())
 
         if event is not None:
             # Si l'évènement n'est pas null, réaliser l'évènement de la clique de souris et réinitialiser last_text
@@ -769,8 +771,8 @@ class MainWindow(QMainWindow):
 
     def insert_image(self):
         home = os.path.join(os.environ['HOMEPATH'])
-        fil = 'Image files (*.jpg *.git)'
-        dialog = QFileDialog.getOpenFileName(parent=self, caption='Choose image', directory=home, filter=fil)
+        fil = 'Fichiers images (*.jpg *.git)'
+        dialog = QFileDialog.getOpenFileName(parent=self, caption='Choisir une image', directory=home, filter=fil)
         path = dialog[0]
 
         image = QImage(path)
@@ -932,9 +934,10 @@ class MainWindow(QMainWindow):
 
     def set_freeze(self, freeze):
         self.notes_text.setReadOnly(freeze)
+        self.file_menu.setDisabled(freeze)
         self.keywords_menu.setDisabled(freeze)
         self.insert_menu.setDisabled(freeze)
-        self.keyword_line.setDisabled(freeze)
+        self.toolbar.setDisabled(freeze)
         self.clear_text_act.setDisabled(freeze)
 
     def clear_gen_keys(self):
@@ -988,10 +991,15 @@ class MainWindow(QMainWindow):
         for idea in copied_ideas:
             cursor.insertText(idea.phrase + '\n')
 
-    def save_every_thing(self):
-        for notes_tuple in self.notes_dict.values():
-            self.notes = notes_tuple[4]
-            self.save_on_cloud(False)
+    def save_every_thing(self, close_everything=False):
+        if close_everything:
+            for tab_index in self.notes_dict.keys():
+                self.close_tab(tab_index, save=True)
+
+        else:
+            for notes_tuple in self.notes_dict.values():
+                self.notes = notes_tuple[4]
+                self.save_on_cloud(False)
 
     def closeEvent(self, *args, **kwargs):
         self.save_every_thing()
@@ -1014,15 +1022,14 @@ class MainWindow(QMainWindow):
 
         if cursor.hasSelection():
             phrase = cursor.selectedText()
-            cursor.clearSelection()
+            cursor.setPosition(cursor.selectionStart())
         else:
             phrase = cursor.block().text()
+        line = cursor.blockNumber()
 
         if new_key is None:
             new_key = phrase.strip().lower()
 
-        line = cursor.blockNumber()
-        cursor.setPosition(cursor.selectionStart())
         font = co.get_max_font_by_line(self.notes_text, cursor, line, True)
         new_idea = Idea(phrase, line, font, new_key)
 
@@ -1064,7 +1071,7 @@ class MainWindow(QMainWindow):
         """
         doc = self.notes_text.document()
         i = 0
-        nb_lines = doc.blockCount()
+        nb_lines = doc.toPlainText().count('\n')
         for line in range(nb_lines):
 
             phrase = doc.findBlockByLineNumber(line).text()

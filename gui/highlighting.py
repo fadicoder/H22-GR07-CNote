@@ -256,6 +256,7 @@ class HighlightingSystem:
                 self.__rehighlight()
 
         cursor.clearSelection()
+        cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock)
         self.notes_text.setTextCursor(cursor)
 
     def __skip_phrase_highlight(self, to_highlight, highlight_pos, idea):
@@ -308,7 +309,17 @@ class HighlightingSystem:
         self.highlights.clear()
         self.origin_text = None
         # Quand la variable self.original_cursor a la valeur nulle, cela indique que le document n'a aucun surlignage
+
+        # S'assurer qu'il ne reste aucun surlignage
         self.set_freeze(freeze_texts)
+        cursor = self.keys_text.textCursor()
+        cursor.setPosition(0)
+        cursor.movePosition(QTextCursor.MoveOperation.End, QTextCursor.MoveMode.KeepAnchor)
+        self.keys_text.setTextCursor(cursor)
+        self.keys_text.setTextBackgroundColor(QColorConstants.Transparent)
+        cursor.clearSelection()
+        cursor.setPosition(0)
+        self.keys_text.setTextCursor(cursor)
 
     def pop_selected_elements(self):
 
