@@ -132,6 +132,7 @@ class Notes:
 
         txtsl = ''
         txtsl = self.get_notes_info(headtxt,  maintxt, sumtxt, genekeys, adkeys)
+        txtsl = txtsl.replace("@&%*"," ")
         open('temphtml.txt','w').write(txtsl)
         transformer = HtmlToDocx()
         transformer.parse_html_file('temphtml.txt', self.title)
