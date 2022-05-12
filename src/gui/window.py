@@ -11,12 +11,20 @@ from PyQt6.QtWidgets import *
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import *
 
+'''
+- test laod and save as
+- veuillez entrer nom utilisateur ou mot de passe
+'''
+
 
 class MainWindow(QMainWindow):
+    """
+    Cette classe est la fenetre principale du programme
+    """
 
     DEFAULT_FONT = QFont('Calibri', 15)
 
-    def __init__(self):
+    def __init__(self): # ceci est l'initialisation de la fenetre principale et les réglages par défault
 
         self.highlighter = None
         self.summery_text = None
@@ -73,7 +81,7 @@ class MainWindow(QMainWindow):
 
         save_as_act = QAction('Sauvegarder sous', self)
         save_as_act.setShortcut('Ctrl+Shift+S')
-        save_as_act.triggered.connect(self.save_as)
+        save_as_act.triggered.connect(lambda:self.save(1))
 
         save_on_cloud_act = QAction('Sauvegarder dans le compte', self)
         save_on_cloud_act.triggered.connect(lambda: self.save_on_cloud(True))
@@ -99,6 +107,9 @@ class MainWindow(QMainWindow):
         edit_username_act.triggered.connect(self.prompt_username)
         edit_pwd_act = QAction('Modifier le nom de passe', self)
         edit_pwd_act.triggered.connect(self.prompt_password)
+
+        insert_image_act = QAction('Insérer une image', self)
+        insert_image_act.triggered.connect(self.insert_image)
 
         generate_act = QAction('Générer des mots-clés', self)
         generate_act.setShortcut('Ctrl+G')
@@ -127,12 +138,19 @@ class MainWindow(QMainWindow):
         self.file_menu.addSeparator()
         self.file_menu.addAction(self.clear_text_act)
 
+
+        self.insert_menu = self.menubar.addMenu('Insérer')
+        self.insert_menu.addAction(insert_image_act)
+
         self.keywords_menu = self.menubar.addMenu('Mots-clés')
         self.keywords_menu.addAction(generate_act)
         self.keywords_menu.addSeparator()
         self.keywords_menu.addActions([clear_added_keys_act, clear_gen_keys_act, clear_all_keys_act])
 
     def save_on_disk_docx(self):
+        """
+        Cette fonction envoie les données pour enregistrer une copie des notes en format docx dans la machine locale
+        """
         sumtext = self.summery_text.toHtml()
         headtext = self.headLines_text.toHtml()
         maintext = self.notes_text.toHtml()
@@ -140,7 +158,10 @@ class MainWindow(QMainWindow):
         adkeys = self.added_keys
         self.notes.save_on_disk_docx(maintext, sumtext, headtext, genekeys, adkeys)
 
-    def init_toolbar(self):
+    def __init_toolbar(self):
+        """
+        Cette fonction initiallise la barre de paramètre et son contenu, les raccourcis, leurs valeurs, etc.
+        """
 
         self.keyword_line = QLineEdit()
         self.keyword_line.setMaximumWidth(250)
@@ -259,8 +280,11 @@ class MainWindow(QMainWindow):
         self.error_label.setFont(self.DEFAULT_FONT)
         self.error_label.setStyleSheet('color: red')
 
-    def notes_page(self):
-
+    def __notes_page(self):
+        """
+        Cette fonction est la fenetre qui liste toutes les notes ouvertes,
+        et qui permet de facilement passer de l'une à l'autre
+        """
         notes_page = QTabWidget()
 
         first_tab = QWidget()
@@ -304,7 +328,7 @@ class MainWindow(QMainWindow):
 
     def notes_widget(self, index, new_notes):
         """
-        Cette méthode construit les éléments de la page des notes
+        Cette méthode construit les éléments de la page d'une note.
         :return : Widget de note
         """
 
@@ -378,7 +402,10 @@ class MainWindow(QMainWindow):
         self.notes_text.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
         self.keywords_text.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
 
-    def set_on_events_notes_wid(self):
+    def __set_on_events_notes_wid(self):
+        """
+        Cette fonction va compléter et mettre en marche une nouvelle note lorsque tout est valide
+        """
         self.notes_text.verticalScrollBar().valueChanged.connect(self.move_keys_bar)
         self.keywords_text.verticalScrollBar().valueChanged.connect(self.move_notes_bar)
         self.summery_text.cursorPositionChanged.connect(lambda: self.update_cursor_infos(self.summery_text, None))
@@ -394,6 +421,9 @@ class MainWindow(QMainWindow):
         self.keywords_text.mouseMoveEvent = self.keywords_text_mouse_move_event
 
     def show_notes_page(self):
+        """
+        Cette fonction va afficher la page de choix de notes/création de nouvelle note une fois connecté
+        """
         self.menubar.setVisible(True)
         self.set_visible_editing_tools(False)
         self.username_input.clear()
@@ -403,6 +433,9 @@ class MainWindow(QMainWindow):
         self.notes_page.setTabText(0, "C-Note - " + self.account.username)
 
     def show_welcome_page(self):
+        """
+        Cette fonction va afficher la page de connection/création de compte
+        """
         self.menubar.setVisible(False)
         self.toolbar.setVisible(False)
         self.widgets_lst.setCurrentWidget(self.welcome_widget)
@@ -410,7 +443,11 @@ class MainWindow(QMainWindow):
         self.username_input.setFocus()
 
     def create_note(self, new_title=None, from_disk=False):
-
+        """
+        Cette fonction va charger une nouvelle note, qu'elle vienne d'etre créée ou non
+        :param new_title : détermine si la note vient d'etre créée
+        :param from_disk : détermine l'origine de la note
+        """
         if new_title is None:  # Quand il n'y a pas de nouveau titre, on a affaire avec des notes déjà écrites
             if from_disk:
                 self.notes = Notes.notesload(self.account)
@@ -432,6 +469,9 @@ class MainWindow(QMainWindow):
         self.notes_page.setTabText(tab_index, self.notes.title)
 
     def delete_selected_notes(self):
+        """
+        Cette fonction va supprimer une note de la base de données
+        """
         notes = self.notes_combo.currentData()
         for tab_index in self.notes_dict.keys():
             if self.notes_dict[tab_index][4] == notes:
@@ -441,7 +481,9 @@ class MainWindow(QMainWindow):
         self.fill_notes_combo()
 
     def close_tab(self, tab_index, notes_page=None, save=True):
-
+        """
+        Cette fonction va supprimer une note de l'affichage à la demande de l'utilisateur
+        """
         if tab_index == 0:  # fermer 1er tab = sign out
             self.sign_out()
             return
@@ -465,6 +507,9 @@ class MainWindow(QMainWindow):
         self.set_current_tab(notes_page.currentIndex())
 
     def prompt_title(self):
+        """
+        Cette fonction va demander de choisir un titre lorsque l'utilisateur demande de créer un nouveau fichier de notes
+        """
         widget = QWidget()
         widget.setWindowTitle('Titre')
         layout = QVBoxLayout()
@@ -497,6 +542,9 @@ class MainWindow(QMainWindow):
         widget.show()
 
     def prompt_username(self):
+        """
+        Cette fonction va prendre en charge le changement de nom d'utilisateur à la demande de l'utilisateur
+        """
         widget = QWidget()
         widget.setWindowTitle("Nom d'utilisateur")
         layout = QVBoxLayout()
@@ -534,6 +582,9 @@ class MainWindow(QMainWindow):
         widget.show()
 
     def prompt_password(self):
+        """
+        Cette fonction va prendre en charge le changement de mot de passe à la demande de l'utilisateur
+        """
         widget = QWidget()
         widget.setWindowTitle('Mot de passe')
         widget.resize(250, 150)
@@ -586,7 +637,10 @@ class MainWindow(QMainWindow):
         widget.keyPressEvent = key_event
 
     def set_current_tab(self, index):
-
+        """
+        Cette fonction va changer l'affichage de la note selon la sélection de l'utilisateur.
+        :param index : ceci est la note sélectionnée et qui doit etre affichée
+        """
         if index == 0:
             self.set_visible_editing_tools(False)
             return
@@ -632,11 +686,15 @@ class MainWindow(QMainWindow):
         QLineEdit.keyPressEvent(self.username_input, event)
 
     def fill_notes_combo(self):
+
         self.notes_combo.clear()
         for notes in self.account.notes_lst:
             self.notes_combo.addItem(notes.title, notes)
 
     def log_in(self):
+        """
+        Cette fonction va prendre en charge la connection à la demande de l'utilisateur
+        """
         login_successful = self.account.log_in(self.username_input.text(), self.password_input.text())
         if login_successful:
             self.show_notes_page()
@@ -644,7 +702,9 @@ class MainWindow(QMainWindow):
             self.show_error()
 
     def sign_up(self):
-
+        """
+        Cette fonction va prendre en charge la création d'un nouveau compte à la demande de l'utilisateur
+        """
         if self.account.error == Error.Connection_Error:
             self.account = Account()
 
@@ -659,6 +719,9 @@ class MainWindow(QMainWindow):
             self.show_error()
 
     def sign_out(self):
+        """
+        Cette fonction va prendre en charge la déconnection à la demande de l'utilisateur
+        """
         if self.account.is_signed_out():
             return
         self.save_every_thing(close_everything=True)
@@ -667,16 +730,19 @@ class MainWindow(QMainWindow):
         self.notes_dict.clear()
         self.show_welcome_page()
 
-    def save_as(self):
-        self.save(1)
-
     def show_error(self):
+        """
+        Cette fonction va afficher le code d'erreur si le code en rencontre un
+        """
         self.error_label.setText(self.account.get_error_desc())
         self.username_input.clear()
         self.password_input.clear()
         self.username_input.setFocus()
 
     def save_on_cloud(self, refill_notes_combo):
+        """
+        Cette fonction va enregistrer le document dans la base de données
+        """
         self.highlighter.clear_all_selections(False)
         self.notes.save_on_cloud(self.account,
                                  self.notes_text.toHtml(),
@@ -701,6 +767,9 @@ class MainWindow(QMainWindow):
         self.notes.save_on_disk(maintext, sumtext, headtext, genekeys, adkeys, saveas)
 
     def write_notes(self):
+        """
+        Cette fonction va charger les notes au premier plan.
+        """
         self.notes_text.setHtml(self.notes.notes_html)
         self.headLines_text.setHtml(self.notes.headLines_html)
         self.summery_text.setHtml(self.notes.summery_html)
@@ -842,6 +911,9 @@ class MainWindow(QMainWindow):
         QTextEdit.keyPressEvent(self.keywords_text, event)
 
     def headlines_text_focus_out_event(self, event: QFocusEvent):
+        """
+        Cette fonction va modifier le titre selon la première ligne de la première zone de texte
+        """
         QTextEdit.focusOutEvent(self.headLines_text, event)
 
         # changer le titre des notes
@@ -870,7 +942,9 @@ class MainWindow(QMainWindow):
         self.highlighter.clear_all_selections(False)
 
     def add_key_line_press_event(self, event: QKeyEvent):
-
+        """
+        Cette fonction va gérer la création d'une nouvelle idée, et les vérifications nécessaires
+        """
         if event.key() == Qt.Key.Key_Space:  # remplacer le caractère espace par '_'
             self.keyword_line.insert('_')
             return
@@ -892,7 +966,9 @@ class MainWindow(QMainWindow):
             self.keyword_line.setText(word.lower())
 
     def del_selected_ideas(self):
-
+        """
+        Cette fonction va effacer les idées sélectionnées par l'utilisateur
+        """
         selections = self.highlighter.pop_selected_elements()
 
         for pos in selections.keys():
@@ -907,6 +983,9 @@ class MainWindow(QMainWindow):
         self.write_keys()
 
     def set_freeze(self, freeze):
+        """
+        Cette fonction va figer tout ce qui doit l'etre pour éviter que l'utilisateur change des choses lors d'une sélection
+        """
         self.notes_text.setReadOnly(freeze)
         self.file_menu.setDisabled(freeze)
         self.keywords_menu.setDisabled(freeze)
@@ -914,6 +993,9 @@ class MainWindow(QMainWindow):
         self.clear_text_act.setDisabled(freeze)
 
     def clear_gen_keys(self):
+        """
+        Cette fonction va effacer les idées générées par le programme
+        """
         self.generated_keys.clear()
         self.all_keys.clear()
         self.all_keys.extend(self.added_keys)
@@ -921,13 +1003,18 @@ class MainWindow(QMainWindow):
         self.write_keys()
 
     def clear_added_keys(self):
+        """
+        Cette fonction va effacer les idées ajoutées par l'utilisateur
+        """
         self.added_keys.clear()
         self.all_keys.clear()
         self.all_keys.extend(self.generated_keys)
         self.write_keys()
 
     def clear_all_keys(self):
-
+        """
+        Cette fonction va effacer toutes les iddées
+        """
         self.highlighter.clear_all_selections(False)
         self.generated_keys.clear()
         self.added_keys.clear()
@@ -935,13 +1022,20 @@ class MainWindow(QMainWindow):
         self.write_keys()
 
     def clear_notes(self):
+        """
+        Cette fonction vide tout ce qui peut etre vidé
+        """
         self.notes_text.clear()
         self.headLines_text.clear()
         self.summery_text.clear()
         self.clear_all_keys()
 
     def add_copied_ideas(self):
-
+        """
+        Cette fonction va chercher le mot surligner pour le copier en idée.
+        Si le curseur est dans la section des phrases, cela va copier l'idée en mot, si c'est dans la section des idées,
+        ça va copier les idées et les phrases associées
+        """
         cursor = self.notes_text.textCursor()
         insert_line = cursor.blockNumber()
         copied_ideas = HighlightingSystem.get_copied_ideas(insert_line)
@@ -965,6 +1059,9 @@ class MainWindow(QMainWindow):
             cursor.insertText(idea.phrase + '\n')
 
     def save_every_thing(self, close_everything=False):
+        """
+        Cette fonction va tout sauvegarder lorsque nécésaire
+        """
         if close_everything:
             for tab_index in self.notes_dict.keys():
                 self.close_tab(tab_index, save=True)
@@ -975,6 +1072,9 @@ class MainWindow(QMainWindow):
                 self.save_on_cloud(False)
 
     def closeEvent(self, *args, **kwargs):
+        """
+        Cette fonction ferme le programme
+        """
         self.save_every_thing()
         self.app.exit()
 
