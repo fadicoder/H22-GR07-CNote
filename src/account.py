@@ -75,8 +75,8 @@ class Account:
         self.error = Error.No_Error
 
         try:
-            self.mydb = mysql.connector.connect(user=getenv('USERNAME'), password=getenv('PASSWORD'),
-                                                host=getenv('Host'), port=3306, database="CNoteServer")
+            self.mydb = mysql.connector.connect(user=getenv('USER_NAME'), password=getenv('PASSWORD'),
+                                                host=getenv('HOST'), port=3306, database="CNoteServer")
         except mysql.connector.errors.DatabaseError:
             self.error = Error.Connection_Error
             return

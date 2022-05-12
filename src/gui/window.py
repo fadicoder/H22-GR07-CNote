@@ -1,23 +1,19 @@
-from gui import cursoroperations as co
-from idea import Idea
-from gui.highlighting import HighlightingSystem
-from account import Account, Error
-from notes import Notes
-import dictmanager as dm
-import os
+from src import dictmanager as dm
+from src.gui import cursoroperations as co
+from src.idea import Idea
+from src.gui.highlighting import HighlightingSystem
+from src.account import Account, Error
+from src.notes import Notes
 import sys
+import ctypes
 
 from PyQt6.QtWidgets import *
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import *
 
-'''
-- test laod and save as
-- veuillez entrer nom utilisateur ou mot de passe
-'''
-
 
 class MainWindow(QMainWindow):
+
     DEFAULT_FONT = QFont('Calibri', 15)
 
     def __init__(self):
@@ -37,8 +33,14 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.widgets_lst)
         self.setWindowTitle("C-Note")
 
-        self.notes_page = self.__notes_page()
-        self.welcome_widget = self.__welcome_page()
+        #  Indiquer au système d'exploitation que notre programme n'est pas python
+        app_id = u'cnotes.1.0'
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
+
+        self.setWindowIcon(QIcon('resources/appIcon.jpg'))  # assigner une icon au programme
+
+        self.notes_page = self.notes_page()
+        self.welcome_widget = self.welcome_page()
         self.widgets_lst.addWidget(self.notes_page)
         self.widgets_lst.addWidget(self.welcome_widget)
         self.widgets_lst.setCurrentWidget(self.welcome_widget)
@@ -46,12 +48,12 @@ class MainWindow(QMainWindow):
         self.highlight_color = QColorConstants.Cyan
         self.text_color = QColorConstants.Red
         self.menubar = QMenuBar()
-        self.__init_menubar()
+        self.init_menubar()
         self.menubar.setVisible(False)
         self.setMenuBar(self.menubar)
 
         self.toolbar = QToolBar()
-        self.__init_toolbar()
+        self.init_toolbar()
         self.toolbar.setVisible(False)
         self.addToolBar(self.toolbar)
 
@@ -60,7 +62,7 @@ class MainWindow(QMainWindow):
         self.all_keys = self.generated_keys + self.added_keys
         self.last_text = self.notes_text
 
-    def __init_menubar(self):
+    def init_menubar(self):
         """
         Initialise les éléments de la bare de menu.
         """
@@ -97,9 +99,6 @@ class MainWindow(QMainWindow):
         edit_pwd_act = QAction('Modifier le nom de passe', self)
         edit_pwd_act.triggered.connect(self.prompt_password)
 
-        insert_image_act = QAction('Insérer une image', self)
-        insert_image_act.triggered.connect(self.insert_image)
-
         generate_act = QAction('Générer des mots-clés', self)
         generate_act.setShortcut('Ctrl+G')
         generate_act.triggered.connect(self.generate)
@@ -127,10 +126,6 @@ class MainWindow(QMainWindow):
         self.file_menu.addSeparator()
         self.file_menu.addAction(self.clear_text_act)
 
-
-        self.insert_menu = self.menubar.addMenu('Insérer')
-        self.insert_menu.addAction(insert_image_act)
-
         self.keywords_menu = self.menubar.addMenu('Mots-clés')
         self.keywords_menu.addAction(generate_act)
         self.keywords_menu.addSeparator()
@@ -144,7 +139,7 @@ class MainWindow(QMainWindow):
         adkeys = self.added_keys
         self.notes.save_on_disk_docx(maintext, sumtext, headtext, genekeys, adkeys)
 
-    def __init_toolbar(self):
+    def init_toolbar(self):
 
         self.keyword_line = QLineEdit()
         self.keyword_line.setMaximumWidth(250)
@@ -212,7 +207,7 @@ class MainWindow(QMainWindow):
         self.toolbar.addSeparator()
         self.toolbar.addActions(([self.text_color_act, self.text_color_picker_act]))
 
-    def __welcome_page(self):
+    def welcome_page(self):
         """
         Construit l'interface graphique du widget de bienvenue.
         :return : le widget de bienvenue
@@ -227,7 +222,7 @@ class MainWindow(QMainWindow):
         self.login_btn = QPushButton('Connection')
         self.signup_btn = QPushButton('Inscription')
         self.error_label = QLabel()
-        self.__welcome_page_properties()
+        self.welcome_page_properties()
 
         # Organise les éléments
         buttons_layout = QHBoxLayout()
@@ -249,7 +244,7 @@ class MainWindow(QMainWindow):
 
         return welcome_widget
 
-    def __welcome_page_properties(self):
+    def welcome_page_properties(self):
         """
         Cette méthode établit les propriétés des widgets de bienvenue.
         """
@@ -263,7 +258,7 @@ class MainWindow(QMainWindow):
         self.error_label.setFont(self.DEFAULT_FONT)
         self.error_label.setStyleSheet('color: red')
 
-    def __notes_page(self):
+    def notes_page(self):
 
         notes_page = QTabWidget()
 
@@ -275,7 +270,7 @@ class MainWindow(QMainWindow):
 
         create_note_btn = QPushButton('Nouvelles notes')
         self.notes_combo = QComboBox()
-        open_selected_notes_btn = QPushButton('Ouvrir les notes selectionnées')
+        open_selected_notes_btn = QPushButton('Ouvrir les notes sélectionnées')
         delete_notes_btn = QPushButton('Supprimer les notes sélectionnées')
         load_btn = QPushButton('Charger des notes du disk')
         self.fill_notes_combo()
@@ -283,10 +278,10 @@ class MainWindow(QMainWindow):
         layout.addWidget(create_note_btn)
         choose_notes_layout = QHBoxLayout()
         choose_notes_layout.addWidget(self.notes_combo)
-        btns_layout = QVBoxLayout()
-        btns_layout.addWidget(open_selected_notes_btn)
-        btns_layout.addWidget(delete_notes_btn)
-        choose_notes_layout.addLayout(btns_layout)
+        actions_layout = QVBoxLayout()
+        actions_layout.addWidget(open_selected_notes_btn)
+        actions_layout.addWidget(delete_notes_btn)
+        choose_notes_layout.addLayout(actions_layout)
         layout.addSpacing(50)
         layout.addLayout(choose_notes_layout)
         layout.addSpacing(50)
@@ -301,14 +296,12 @@ class MainWindow(QMainWindow):
         delete_notes_btn.clicked.connect(self.delete_selected_notes)
         load_btn.clicked.connect(lambda: self.create_note(from_disk=True))
 
-
         create_note_btn.setMinimumSize(500, 60)
         load_btn.setMinimumHeight(60)
 
-
         return notes_page
 
-    def __notes_widget(self, index, new_notes):
+    def notes_widget(self, index, new_notes):
         """
         Cette méthode construit les éléments de la page des notes
         :return : Widget de note
@@ -325,7 +318,7 @@ class MainWindow(QMainWindow):
         self.keywords_text = QTextEdit()
         self.headLines_text = QTextEdit()
         self.highlighter = HighlightingSystem(self.keywords_text, self.notes_text, self.set_freeze)
-        self.__notes_wid_properties(new_notes)
+        self.notes_wid_properties(new_notes)
         self.notes_dict[index] = (
             self.headLines_text, self.keywords_text, self.notes_text, self.summery_text, self.notes, self.highlighter)
 
@@ -340,11 +333,11 @@ class MainWindow(QMainWindow):
         texts_layout.addWidget(self.summery_text)
 
         # settings on events actions
-        self.__set_on_events_notes_wid()
+        self.set_on_events_notes_wid()
 
         return notes_widget
 
-    def __notes_wid_properties(self, new_notes):
+    def notes_wid_properties(self, new_notes):
         """
         Initialise les propriétés des widgets de notes
         """
@@ -381,11 +374,9 @@ class MainWindow(QMainWindow):
         self.notes_text.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
         self.keywords_text.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
 
-    def __set_on_events_notes_wid(self):
+    def set_on_events_notes_wid(self):
         self.notes_text.verticalScrollBar().valueChanged.connect(self.move_keys_bar)
         self.keywords_text.verticalScrollBar().valueChanged.connect(self.move_notes_bar)
-        self.notes_text.dropEvent = self.drop_event_notes_text
-
         self.summery_text.cursorPositionChanged.connect(lambda: self.update_cursor_infos(self.summery_text, None))
         self.notes_text.cursorPositionChanged.connect(lambda: self.update_cursor_infos(self.notes_text, None))
         self.headLines_text.cursorPositionChanged.connect(lambda: self.update_cursor_infos(self.headLines_text, None))
@@ -393,12 +384,10 @@ class MainWindow(QMainWindow):
         self.notes_text.mousePressEvent = lambda event: self.update_cursor_infos(self.notes_text, event)
         self.headLines_text.mousePressEvent = lambda event: self.update_cursor_infos(self.headLines_text, event)
         self.headLines_text.focusOutEvent = self.headlines_text_focus_out_event
-        self.keywords_text_focus_out_event = self.keywords_text_focus_out_event
+        self.keywords_text.focusOutEvent = self.keywords_text_focus_out_event
         self.keywords_text.mousePressEvent = self.keywords_text_mouse_clic_event
         self.keywords_text.keyPressEvent = self.keywords_text_press_event
         self.keywords_text.mouseMoveEvent = self.keywords_text_mouse_move_event
-
-    # Les méthodes suivantes sont appelées lors des événements :
 
     def show_notes_page(self):
         self.menubar.setVisible(True)
@@ -433,7 +422,7 @@ class MainWindow(QMainWindow):
             return
 
         tab_index = len(self.notes_page)
-        self.notes_page.addTab(self.__notes_widget(tab_index, new_notes), self.notes.title)
+        self.notes_page.addTab(self.notes_widget(tab_index, new_notes), self.notes.title)
         self.notes_page.setCurrentIndex(tab_index)
 
         self.notes_page.setTabText(tab_index, self.notes.title)
@@ -464,7 +453,7 @@ class MainWindow(QMainWindow):
 
         for index in self.notes_dict.keys():
             if index > tab_index:
-                notes_to_shift[index-1] = self.notes_dict[index]
+                notes_to_shift[index - 1] = self.notes_dict[index]
 
         for index in notes_to_shift.keys():
             self.notes_dict[index] = notes_to_shift[index]
@@ -477,7 +466,6 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
         widget.setLayout(layout)
         widget.resize(250, 150)
-
 
         layout.addWidget(QLabel('Veuillez choisir un titre aux notes:'))
         notes_title_line = QLineEdit()
@@ -619,7 +607,6 @@ class MainWindow(QMainWindow):
         self.toolbar.setVisible(visible)
         self.keywords_menu.setEnabled(visible)
         self.file_menu.setEnabled(visible)
-        self.insert_menu.setEnabled(visible)
 
     def password_line_key_event(self, event):
 
@@ -754,7 +741,7 @@ class MainWindow(QMainWindow):
         pour le widget actuel.
         """
 
-        if not text.textCursor().hasSelection():  # Ne pas mettre ajour les information du texte s'il y a une selection
+        if not text.textCursor().hasSelection():  # Ne pas mettre ajour les informations du texte s'il y a une selection
             current_font = text.currentFont()
             self.font_combo.setCurrentFont(current_font)
             self.size_spin.setValue(current_font.pointSize())
@@ -768,15 +755,6 @@ class MainWindow(QMainWindow):
             QTextEdit.mousePressEvent(text, event)
             # Ensuite, effacer les surlignages
             self.highlighter.clear_all_selections(False)
-
-    def insert_image(self):
-        home = os.path.join(os.environ['HOMEPATH'])
-        fil = 'Fichiers images (*.jpg *.git)'
-        dialog = QFileDialog.getOpenFileName(parent=self, caption='Choisir une image', directory=home, filter=fil)
-        path = dialog[0]
-
-        image = QImage(path)
-        self.notes_text.textCursor().insertImage(image)
 
     def select_color(self, for_highlight):
         if for_highlight:
@@ -799,17 +777,6 @@ class MainWindow(QMainWindow):
         cursor = self.last_text.textCursor()
         cursor.clearSelection()
         self.last_text.setTextCursor(cursor)
-
-    def drop_event_notes_text(self, event):
-        if event.mimeData().hasImage:
-            event.setDropAction(Qt.DropAction.CopyAction)
-            urls = event.mimeData().urls()
-            if len(urls) >= 1:
-                path = urls[0].toLocalFile()
-                image = QImage(path)
-                self.notes_text.textCursor().insertImage(image)
-                return
-        QTextEdit.dropEvent(self.notes_text, event)
 
     def move_notes_bar(self):
         pos = self.keywords_text.verticalScrollBar().sliderPosition()
@@ -936,7 +903,6 @@ class MainWindow(QMainWindow):
         self.notes_text.setReadOnly(freeze)
         self.file_menu.setDisabled(freeze)
         self.keywords_menu.setDisabled(freeze)
-        self.insert_menu.setDisabled(freeze)
         self.toolbar.setDisabled(freeze)
         self.clear_text_act.setDisabled(freeze)
 
@@ -1066,7 +1032,7 @@ class MainWindow(QMainWindow):
 
     def generate_empty(self):
         """
-        Cette fonction parcour toutes les idées générées automatiquement. Si une ligne ne contient pas d'idée,
+        Cette fonction parcourt toutes les idées générées automatiquement. Si une ligne ne contient pas d'idée,
         la fonction ajoute une idée vide (sans mots-clés) à cette ligne.
         """
         doc = self.notes_text.document()
@@ -1088,7 +1054,9 @@ class MainWindow(QMainWindow):
                 self.all_keys.append(idea)
                 i += 1
 
-            else:  # Si on n'est à la dernière idée mais qu'on est pas dans la même ligne, passer à la prochaine idée.
+            else:
+                # Si on n'est pas à la dernière idée, mais qu'on n'est pas dans la même ligne, passer à la
+                # prochaine idée.
                 while self.generated_keys[i].line <= line:
                     i += 1
                     if len(self.generated_keys) >= i:

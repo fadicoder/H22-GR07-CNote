@@ -63,7 +63,7 @@ def get_max_font_by_line(text, cursor, i: int, cursor_on_line: bool):
 
     for j in range(document.findBlockByLineNumber(i).length() - 1):
 
-        cursor.movePosition(QTextCursor.MoveOperation.NextCharacter)
+        cursor.setPosition(cursor.position()+1)
         text.setTextCursor(cursor)
         current_font = text.currentFont()
         if current_font.pointSize() > max_font.pointSize():

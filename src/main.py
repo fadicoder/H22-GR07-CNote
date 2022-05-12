@@ -1,4 +1,4 @@
-from gui.window import MainWindow
+from src.gui.window import MainWindow
 from dotenv import load_dotenv
 
 
