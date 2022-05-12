@@ -328,7 +328,7 @@ class MainWindow(QMainWindow):
 
     def notes_widget(self, index, new_notes):
         """
-        Cette méthode construit les éléments de la page d'une note
+        Cette méthode construit les éléments de la page d'une note.
         :return : Widget de note
         """
 
