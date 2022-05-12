@@ -24,6 +24,7 @@ class MainWindow(QMainWindow):
         self.keywords_text = None
         self.headLines_text = None
         self.notes = None
+        self.notes_combo = None
         self.notes_dict = dict()
         self.account = Account()
 
@@ -311,6 +312,8 @@ class MainWindow(QMainWindow):
         texts_layout = QVBoxLayout()
         texts_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         notes_widget.setLayout(texts_layout)
+        self.generated_keys = self.notes.generated_keys
+        self.added_keys = self.notes.added_keys
 
         # Initilizing widget elements
         self.summery_text = QTextEdit()
@@ -320,7 +323,8 @@ class MainWindow(QMainWindow):
         self.highlighter = HighlightingSystem(self.keywords_text, self.notes_text, self.set_freeze)
         self.notes_wid_properties(new_notes)
         self.notes_dict[index] = (
-            self.headLines_text, self.keywords_text, self.notes_text, self.summery_text, self.notes, self.highlighter)
+            self.headLines_text, self.keywords_text, self.notes_text, self.summery_text, self.notes, self.highlighter,
+            self.added_keys, self.generated_keys)
 
         # Organizing elements in layouts
 
@@ -597,6 +601,9 @@ class MainWindow(QMainWindow):
         self.notes = texts_tuple[4]
         self.highlighter.clear_all_selections(False)
         self.highlighter = texts_tuple[5]
+        self.added_keys = texts_tuple[6]
+        self.generated_keys = texts_tuple[7]
+        self.all_keys = self.generated_keys + self.added_keys
 
         self.notes_text.setFocus()
         self.update_cursor_infos(self.notes_text, None)
