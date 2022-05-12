@@ -105,17 +105,13 @@ class Notes:
 
     def save_on_disk(self, maintxt, sumtxt, headtxt, genekeys, adkeys, saveas):  # sauvegarde le document
 
-        txtsl = ''
-
         if self.fileopenned is None or saveas:
             fileopened = easygui.filesavebox()
             if fileopened is None:
                 return
             self.fileopenned = fileopened
 
-        else:
-            txtsl = self.get_notes_info(maintxt, sumtxt, headtxt, genekeys, adkeys)
-
+        txtsl = self.get_notes_info(maintxt, sumtxt, headtxt, genekeys, adkeys)
         pickle.dump(txtsl, open(self.fileopenned, "wb"))  # sauvegarde le document
 
         '''        openededbeforetemp = None

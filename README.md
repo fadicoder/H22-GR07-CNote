@@ -1,9 +1,5 @@
 # H22-GR07-CNote
-Pourquoi tu as choisi cette librairie ? 
-https://fr.m.wikipedia.org/wiki/PyQt
 
-phrase test:
-
-Je fais une phrase Voici la deux. Et ceci est la trois
-
----- ---- !!!CHARACTÈRE INVISIBLE ATTENTION!!!
+# Features
+Ce programme est un logiciel de prise de note conçu pour aider les individus à noter les informations importantes par 
+une génération automatique des mots-clés.
