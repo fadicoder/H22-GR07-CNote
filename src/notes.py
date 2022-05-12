@@ -14,20 +14,20 @@ class Notes:
     """
     def __init__(self, identification=None, account=None, notes_info=None, title=None, file=None):
 
-        self.fileopenned = file #ceci est le fichier de la note
-        self.id = identification #note le compte associé à la note
+        self.fileopenned = file  # ceci est le fichier de la note
+        self.id = identification  # note le compte associé à la note
         self.added_keys = list()
         self.generated_keys = list()
 
-        if identification is None: #associe un compte si ce n'est pas fait
+        if identification is None:  # associe un compte si ce n'est pas fait
             self.id = account.generate_id()
 
-        if notes_info is None: #initialise les zones de texte si ce n'est pas déjà fait
+        if notes_info is None:  # initialise les zones de texte si ce n'est pas déjà fait
             self.summery_html = ""
             self.headLines_html = ""
             self.notes_html = ""
 
-        else: #sinon ceci va charger la note
+        else:  # sinon ceci va charger la note
             attributes_list = notes_info.split('@&%*') #cette section est pour les zones de textes
             self.summery_html = attributes_list[1]
             self.headLines_html = attributes_list[2]
@@ -56,7 +56,7 @@ class Notes:
                 self.added_keys.append(Idea(idea[0], int(idea[1]), font, keywords))
 
 
-        if title is None: #créée un titre si il n'y en a pas, sinon le charge
+        if title is None:  # créée un titre si il n'y en a pas, sinon le charge
             self.title = Notes.extract_title(self.headLines_html)
         else:
             self.title = title
@@ -65,18 +65,19 @@ class Notes:
     def extract_title(html):
         """
         Ceci va chercher le titre dans la première ligne de texte
+        :param html : html du bloc des titres
         """
         headlines = bs4.BeautifulSoup(html, features='html.parser').get_text().split('\n')
 
         if len(headlines) >= 3:
 
             if headlines[2].strip() == '':
-                title = 'Sans titre'# écrit ca si il n'y a rien sur la premiere ligne
+                title = 'Sans titre'  # écrit ca si il n'y a rien sur la premiere ligne
             else:
                 title = headlines[2]
 
         else:
-            title = 'Sans titre'# écrit ca si il y a moins de 3 lignes
+            title = 'Sans titre'  # écrit ca si il y a moins de 3 lignes
 
         return title
 
@@ -145,7 +146,6 @@ class Notes:
         """
         Cette fonction exporter les notes en format docx sur la machine locale
         """
-        txtsl = ''
         txtsl = self.get_notes_info(headtxt,  maintxt, sumtxt, genekeys, adkeys)
         txtsl = txtsl.replace("@&%*"," ")
         open('temphtml.txt','w').write(txtsl)

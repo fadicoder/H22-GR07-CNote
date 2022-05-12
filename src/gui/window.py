@@ -32,6 +32,9 @@ class MainWindow(QMainWindow):
         self.keywords_text = None
         self.headLines_text = None
         self.notes = None
+        self.file_menu = None
+        self.keywords_menu = None
+        self.clear_text_act = None
         self.notes_combo = None
         self.notes_dict = dict()
         self.account = Account()
@@ -108,9 +111,6 @@ class MainWindow(QMainWindow):
         edit_pwd_act = QAction('Modifier le nom de passe', self)
         edit_pwd_act.triggered.connect(self.prompt_password)
 
-        insert_image_act = QAction('Insérer une image', self)
-        insert_image_act.triggered.connect(self.insert_image)
-
         generate_act = QAction('Générer des mots-clés', self)
         generate_act.setShortcut('Ctrl+G')
         generate_act.triggered.connect(self.generate)
@@ -137,10 +137,6 @@ class MainWindow(QMainWindow):
         self.file_menu.addAction(export_docs_act)
         self.file_menu.addSeparator()
         self.file_menu.addAction(self.clear_text_act)
-
-
-        self.insert_menu = self.menubar.addMenu('Insérer')
-        self.insert_menu.addAction(insert_image_act)
 
         self.keywords_menu = self.menubar.addMenu('Mots-clés')
         self.keywords_menu.addAction(generate_act)
@@ -362,7 +358,6 @@ class MainWindow(QMainWindow):
 
         # settings on events actions
         self.set_on_events_notes_wid()
-
         return notes_widget
 
     def notes_wid_properties(self, new_notes):
@@ -402,7 +397,7 @@ class MainWindow(QMainWindow):
         self.notes_text.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
         self.keywords_text.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
 
-    def __set_on_events_notes_wid(self):
+    def set_on_events_notes_wid(self):
         """
         Cette fonction va compléter et mettre en marche une nouvelle note lorsque tout est valide
         """
