@@ -25,6 +25,9 @@ class Error(enum.Enum):
     Connection_Error = 14
 
     def get_desc(self):
+        """
+        Cette fonction affiche les messages d'erreurs possibles lors de la connection/creation de compte
+        """
         if self == self.No_Error:
             return ''
         if self == self.Pwd_Not_Matched:
@@ -57,7 +60,9 @@ class Error(enum.Enum):
 
 
 class Account:
-
+    """
+    Ceci est l'instance d'un compte
+    """
     PROHIBITED_SYMBOLS = re.compile('[@*\'" \\\\()^/]')
 
     def __init__(self):
@@ -71,7 +76,9 @@ class Account:
         self.connect()
 
     def connect(self):
-
+        """
+        Cette fonction se connecte à la base de donnée avec le super-user selon les infos dans le fichier .env
+        """
         self.error = Error.No_Error
 
         try:
@@ -84,12 +91,17 @@ class Account:
         self.cursor = self.mydb.cursor()
 
     def get_error_desc(self):
+        """
+        Cette fonction va chercher l'erreur pour l'afficher si il y en a une
+        """
         error_desc = self.error.get_desc()
         self.error = Error.No_Error
         return error_desc
 
     def log_in(self, username: str, pwd: str) -> bool:
-
+        """
+        Cette fonction tente de se connecter à un compte, sinon pointe vers les erreurs qui sont arrivées
+        """
         if len(username) == 0:
             self.error = Error.Username_Empty
             return False
@@ -114,7 +126,7 @@ class Account:
             return False
 
 
-        # vérifier que le tableau des données exsist
+        # vérifier que le tableau des données exsiste
         self.cursor.execute(f"SELECT EXISTS (SELECT TABLE_NAME FROM information_schema.TABLES "
                             f"WHERE TABLE_NAME = '{username}_cnotes');")
         if self.cursor.fetchone()[0] == 0:  # Si pour une raison x le tableau n'est plus la, il faut le recréer
@@ -131,7 +143,9 @@ class Account:
         return True
 
     def sign_up(self, username: str, pwd: str):
-
+        """
+        Cette fonction tente de créer un compte, sinon pointe vers les erreurs qui sont arrivées
+        """
         if len(username) == 0:
             self.error = Error.Username_Empty
             return False
@@ -180,6 +194,9 @@ class Account:
         return True
 
     def sign_out(self):
+        """
+        Cette fonction déconnecte l'utilisateur
+        """
         self.mydb.disconnect()
         self.mydb = None
         self.cursor = None
@@ -190,7 +207,12 @@ class Account:
         self.connect()
 
     def upload_notes(self, notes, notes_info: str):
-
+        """
+        Cette fonction envoie les notes dans le cloud lorsque l'utilisateur le demande et
+        vérifie si elle est déja présente, si elle est, elle est mise à jour.
+        :param notes : la note qui doit etre  envoyée
+        :param notes_info : string extraite des notes
+        """
         if self.username == '':  # S'il n'y a pas de nom d'utilisateur, le compte est déconnecté
             return
 
@@ -207,6 +229,9 @@ class Account:
         self.mydb.commit()
 
     def delete_notes(self, notes):
+        """
+        Cette fonction supprime la note demandée de la base de données
+        """
         if self.username == '':  # S'il n'y a pas de nom d'utilisateur, le compte est déconnecté
             return
         if notes not in self.notes_lst:
@@ -217,6 +242,10 @@ class Account:
         self.mydb.commit()
 
     def change_username(self, new_username):
+        """
+        Cette fonction tente de changer le nom d'utilisateur,
+        sinon renvoie l'erreur qui s'est produite lors de la tentative
+        """
         if self.username == '':
             self.error = Error.Connection_Error
             return False
@@ -248,6 +277,10 @@ class Account:
         return True
 
     def change_password(self, old_pwd, new_pwd, confirm_new_pwd):
+        """
+        Cette fonction tente de changer le mot de passe d'utilisateur,
+        sinon renvoie l'erreur qui s'est produite lors de la tentative
+        """
         if self.username == '':
             self.error = Error.Connection_Error
             return False
@@ -275,6 +308,9 @@ class Account:
         return True
 
     def is_used_username(self, username):
+        """
+        Cette fonction vérifie et empeche d'utiliser deux fois le meme nom d'utilisateur
+        """
         self.cursor.execute(f"SELECT user FROM mysql.user WHERE user = '{username}'")
         check_user = self.cursor.fetchone()
 
@@ -284,15 +320,24 @@ class Account:
         return False
 
     def is_used_id(self, identification):
+        """
+        Cette fonction vérifie et empeche d'utiliser deux fois le meme id de notes
+        """
         self.cursor.execute(f"SELECT id FROM cnoteserver.{self.username}_cnotes WHERE id = '{identification}';")
         check_id = self.cursor.fetchone()
         return check_id is not None
 
     def generate_id(self):
+        """
+        Cette fonction génère l'identifiant de la note uploadée
+        """
         identification = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
         while self.is_used_id(identification):
             identification = ''.join(random.choices(string.ascii_letters, k=32))
         return identification
 
     def is_signed_out(self):
+        """
+        Cette fonction vérifie si l'utilisateur est déconnecté
+        """
         return self.username == ''

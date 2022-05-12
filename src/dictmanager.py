@@ -9,8 +9,8 @@ USAGE_DICT = SortedDict()
 
 def open_dict():
     """
-    This function fill the ordered dictionary USAGE_DICT with the words written in the file 'dictionary.txt'.
-    The words are the keys and there value is an int that represent the percentage of usage of the word.
+    Cette fonction remplis le dictionnaire utilisé appelé USAGE_DICT avec les mots dans le fichier 'dictionary.txt'.
+    Les mots seront comparées aux idées et ces mots on un int qui représente la fréquence d'utilisation du mot.
     """
     with open(DICT_PATH, 'r') as dict_file:
         for line in dict_file.readlines():
@@ -18,14 +18,15 @@ def open_dict():
             USAGE_DICT[word_info[0]] = int(word_info[1])
 
 
-# Opening the dictionary in a seperated thread:
+# Ouverture du dictionnaire dans un thread séparé :
 dict_thread = threading.Thread(target=open_dict)
 dict_thread.start()
 
 
 def words_matrix(text):
     """
-    This function create a matrix of words from a string text. Each line of text represent a line of the matrix.
+    Cette fonction crée une matrice de mots à partir d'une string.
+    Chaque ligne de texte représente une ligne de la matrice.
     """
     phrases = text.lower().split("\n")
     words = []
@@ -111,7 +112,3 @@ def delete_old_ideas(ideas: list, from_to: tuple, text: str):
 
     for idea in ideas_to_remove:
         ideas.remove(idea)
-
-    '''
-    accepted_ideas = [idea for idea in ideas if idea.line < start or idea.line > end]
-    '''

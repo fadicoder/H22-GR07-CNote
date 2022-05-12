@@ -25,23 +25,41 @@ class Idea:
         return ' '.join(self.keywords)
 
     def phrase_include_idea(self, phrase):
+        """
+        Cette fonction vérifie si l'idée est dans la phrase donnée
+        """
         return self.phrase in phrase
 
     def is_empty(self):
+        """
+        Cette fonction vérifie si une ligne est vide
+        """
         return len(self.keywords) == 0
 
     def add_keyword(self, new_keyword):
+        """
+        Cette fonction vérife que le mot clée n'existe pas déja avant de le rajouter
+        """
         if new_keyword not in self.keywords:
             self.keywords.append(new_keyword)
 
     def shift_line(self, shift):
+        """
+        Cette fonction fait descendre les idées qui sont après l'endroit ou on essaie d'en rajouter
+        """
         self.line = self.line + shift
 
     def remove_keyword(self, keyword):
         self.keywords.remove(keyword)
 
     def same_line(self, idea2):
+        """
+        Retourne si deux idées sont sur la meme ligne ou pas
+        """
         return self.line == idea2.line
 
     def get_line(self):
+        """
+        Récupère la ligne de l'idée
+        """
         return self.line

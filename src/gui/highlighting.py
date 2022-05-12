@@ -35,7 +35,22 @@ class HighlightingSystem:
         self.color.setAlpha(100)
 
     def highlight_with_key(self, key, all_keys):
+        """
+        Cette fonction surligne ou dé-surligne les mots-clés avec leur phrase. La méthode utilise le module Input
+        afin de vérifier les entrées dans le clavier et faire les selection selon ces entrées.
 
+        Si la touche CONTROL est enfoncée, la selection est multiple.
+        Si la touche SHIFT est enfoncée, la selection des éléments entre le dernier surlignage et la position
+        de la click est automatique.
+        Si aucun de ces deux touches n'est enfoncée, la selection est simple (un élément à la fois).
+
+        Cette méthode fonction bloque toute modification du block des notes et des mots-clés et dé-bloque ceux-ci
+        quand aucun élément n'est sélectionné.
+
+        Cette fonction est pareille à highlight mais permet de faire la sélection avec les boutons
+        :param pos : position du curseur dans l'écran (QPoint)
+        :param all_keys : liste des idées
+        """
         if Qt.KeyboardModifier.ShiftModifier in QApplication.keyboardModifiers():
             return
         if not self.has_selection():
@@ -75,7 +90,7 @@ class HighlightingSystem:
         Cette méthode fonction block toute modification du block des notes et des mots-clés et dé-block ceux-ci
         quand aucun élément n'est sélectionné.
 
-        :param pos : position de la clique dans l'écran (QPoint)
+        :param pos : position de la souris dans l'écran (QPoint)
         :param all_keys : liste des idées
         """
         self.all_keys = all_keys
@@ -130,17 +145,6 @@ class HighlightingSystem:
         """
         for pos in self.highlights.keys():
             self.__highlight_key(pos, True, False)
-
-    @staticmethod
-    def __get_first_key_pos(cursor: QTextCursor):
-
-        cursor.movePosition(QTextCursor.MoveOperation.Start)
-        cursor.movePosition(QTextCursor.MoveOperation.NextWord, QTextCursor.MoveMode.KeepAnchor)
-
-
-        if cursor.selectedText().strip() == '':
-            return cursor.position() + 1
-        return 0
 
     def __highlight_key(self, pos, to_highlight, double_check_to_highlight):
         """
@@ -305,6 +309,10 @@ class HighlightingSystem:
             self.__highlight_key(pos, True, False)
 
     def clear_all_selections(self, freeze_texts):
+        """
+        Cette fonction vide et nettoie n'importe quel type de sélection avant de dégeler les éléments gelés
+        :param freeze_texts : tout ce qui a été gelé
+        """
         self.__clear_highlights()
         self.highlights.clear()
         self.origin_text = None
@@ -322,7 +330,9 @@ class HighlightingSystem:
         self.keys_text.setTextCursor(cursor)
 
     def pop_selected_elements(self):
-
+        """
+        Cette fonction va retourner la sélection enregistrée et vider le cache du texte surligné
+        """
         selected_elements = self.highlights.copy()
 
         self.clear_all_selections(True)
@@ -330,7 +340,9 @@ class HighlightingSystem:
         return selected_elements
 
     def get_selected_phrases(self):
-
+        """
+        Cette fonction renvoie la phrase dans laquelle il y a une sélection
+        """
         phrases = ''
         last_phrase = ''
         for idea in self.highlights.values():
@@ -342,7 +354,9 @@ class HighlightingSystem:
         return phrases
 
     def get_selected_keywords(self):
-
+        """
+        Cette fonction retourne les mots séléctionnés au curseur
+        """
         keywords = []
         cursor = self.keys_text.textCursor()
         for pos in self.highlights.keys():
@@ -353,6 +367,9 @@ class HighlightingSystem:
         return keywords
 
     def copy_selection(self):
+        """
+        Cette fonction va garder en mémoire la sélection effectuée jusqu'à associer des idées à celles-ci
+        """
         HighlightingSystem.copied_ideas = []
         for pos in self.highlights.keys():
             HighlightingSystem.copied_ideas.append(self.highlights[pos])
@@ -362,11 +379,17 @@ class HighlightingSystem:
         QApplication.clipboard().setText(self.get_selected_phrases())
 
     def has_selection(self):
+        """
+        Cette fonction vérifie si il y a une séléection lors d'associatin d'une nouvelle idée
+        """
         return self.origin_text is not None
 
     @staticmethod
     def get_copied_ideas(start_line):
-
+        """
+        Cette fonction vérifie les idées qui sont liées à une certaine ligne
+        :param start_line : la ligne à vérifier
+        """
         new_ideas = []
         added_ideas = []
 
@@ -395,9 +418,15 @@ class HighlightingSystem:
 
     @staticmethod
     def clear_copied_elements():
+        """
+        Cette fonction vide le presse-papiers de son contenu
+        """
         HighlightingSystem.copied_ideas.clear()
         QApplication.clipboard().clear()
 
     @staticmethod
     def has_copied_elements():
+        """
+        Cette fonction vérifie si des idées ont été copiées
+        """
         return len(HighlightingSystem.copied_ideas) != 0

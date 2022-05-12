@@ -24,6 +24,12 @@ def move_cursor_to_line(cursor: QTextCursor, line: int):
 
 
 def get_start_of_phrase(cursor: QTextCursor, phrase: str, start_line: int):
+    """
+    Cette fonction retourne la position du début de la phrase si elle est sur plusieurs lignes.
+    :param cursor : le curseur à déplacer.
+    :param phrase : la phrase dans lequel se trouve le curseur.
+    :param start_line : début de cette phrase.
+    """
     if cursor.document().toPlainText().count('\n') - 1 < start_line:
         return
 
@@ -125,7 +131,12 @@ def adjust_idea_fonts(text, all_keys: list):
 
 
 def move_cursor_to_next_word(cursor: QTextCursor, move_operation: QTextCursor.MoveOperation):
-
+    """
+    Cette fonction déplace le curseur au prochain mot
+    lorsque on fait plusieurs fois la meme opération sur différents mots.
+    :param cursor : ceci est le curseur
+    :param move_operation : direction du déplacement
+    """
 
     valid_operation = cursor.movePosition(move_operation)
     first_line = cursor.blockNumber()
