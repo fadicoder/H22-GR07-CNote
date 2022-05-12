@@ -1,7 +1,7 @@
 import pickle
 import easygui
 from PyQt6.QtGui import QFont
-from bs4 import BeautifulSoup
+import bs4
 from htmldocx import HtmlToDocx
 
 
@@ -61,7 +61,7 @@ class Notes:
 
     @staticmethod
     def extract_title(html):
-        headlines = BeautifulSoup(html, features='html.parser').get_text().split('\n')
+        headlines = bs4.BeautifulSoup(html, features='html.parser').get_text().split('\n')
         if len(headlines) >= 3:
 
             if headlines[2].strip() == '':

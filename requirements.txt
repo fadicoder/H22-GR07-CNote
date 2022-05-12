@@ -1,0 +1,8 @@
+PyQt6~=6.2.3
+sortedcontainers~=2.4.0
+python-dotenv~=0.20.0
+easygui~=0.98.2
+beautifulsoup4~=4.11.1
+htmldocx~=0.0.6
+mysql~=0.0.3
+mysql-connector-python~=8.0.29
