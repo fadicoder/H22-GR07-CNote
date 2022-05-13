@@ -148,7 +148,8 @@ class Notes:
         """
         Cette fonction exporter les notes en format docx sur la machine locale
         """
-        txtsl = self.get_notes_info(headtxt,  maintxt, sumtxt, genekeys, adkeys)
+
+        txtsl = (headtxt +maintxt + sumtxt)
         txtsl = txtsl.replace("@&%*", " ")
         open('temphtml.txt','w').write(txtsl)
         transformer = HtmlToDocx()
