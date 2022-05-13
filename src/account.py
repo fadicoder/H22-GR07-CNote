@@ -56,6 +56,8 @@ class Error(enum.Enum):
             return "Le mot de passe ne peut pas contenir les caractères:\n @, *, ^, \", ', \\, /, (, ) ou espace"
         if self == self.Confirm_Pwd_Error:
             return "La confirmation du mot de passe est erronée"
+        if self == self.Invalid_Pwd:
+            return "Le mot de passe est incorrect"
         return 'Erreur inconnue: \nVeuillez contacter le soutien technique'
 
 
