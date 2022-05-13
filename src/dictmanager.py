@@ -3,7 +3,7 @@ import threading
 import re
 from idea import Idea
 
-DICT_PATH = 'resources/dictionary.txt'
+DICT_PATH = '../resources/dictionary.txt'
 USAGE_DICT = SortedDict()
 
 
