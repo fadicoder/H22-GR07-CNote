@@ -177,6 +177,6 @@ class Notes:
             return None
 
         txtsl = pickle.load(open(filetoopen, "rb"))
-        notes = Notes(account, notes_info=txtsl, file=filetoopen)
+        notes = Notes(account=account, notes_info=txtsl, file=filetoopen)
 
         return notes

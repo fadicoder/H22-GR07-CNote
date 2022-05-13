@@ -49,7 +49,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowIcon(QIcon('resources/appIcon.jpg'))  # assigner une icon au programme
 
-        self.notes_page = self.notes_page()
+        self.notes_page = self.init_notes_page()
         self.welcome_widget = self.welcome_page()
         self.widgets_lst.addWidget(self.notes_page)
         self.widgets_lst.addWidget(self.welcome_widget)
@@ -274,7 +274,7 @@ class MainWindow(QMainWindow):
         self.error_label.setFont(self.DEFAULT_FONT)
         self.error_label.setStyleSheet('color: red')
 
-    def notes_page(self):
+    def init_notes_page(self):
         """
         Cette fonction est la fenetre qui liste toutes les notes ouvertes,
         et qui permet de facilement passer de l'une à l'autre
@@ -490,12 +490,19 @@ class MainWindow(QMainWindow):
 
         notes_to_shift = dict()
 
+        if len(self.notes_dict) == 1:
+            self.notes_dict.clear()
+            return
+
         for index in self.notes_dict.keys():
             if index > tab_index:
                 notes_to_shift[index - 1] = self.notes_dict[index]
 
         for index in notes_to_shift.keys():
             self.notes_dict[index] = notes_to_shift[index]
+
+        for index in notes_to_shift.keys():
+            self.notes_dict.pop(index+1)
 
         self.set_current_tab(notes_page.currentIndex())
 
@@ -735,6 +742,7 @@ class MainWindow(QMainWindow):
         self.save_every_thing(close_everything=True)
         self.account.sign_out()
         self.notes = None
+        self.notes_dict.clear()
         self.notes_dict.clear()
         self.show_welcome_page()
 
@@ -1100,11 +1108,12 @@ class MainWindow(QMainWindow):
 
     def save_every_thing(self, close_everything=False):
         """
-        Cette fonction va tout sauvegarder lorsque nécésaire
+        Cette fonction va tout sauvegarder lorsque nécessaire
         """
         if close_everything:
-            for tab_index in self.notes_dict.keys():
-                self.close_tab(tab_index, save=True)
+            while len(self.notes_dict) > 0:
+                self.close_tab(1, save=True)
+
 
         else:
             for notes_tuple in self.notes_dict.values():
