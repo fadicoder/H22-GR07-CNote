@@ -1,7 +1,12 @@
+import _pickle
+import os
 import pickle
+import shutil
+
 import easygui
 from PyQt6.QtGui import QFont
 import bs4
+from PyQt6.QtWidgets import QFileDialog
 from htmldocx import HtmlToDocx
 
 
@@ -144,7 +149,7 @@ class Notes:
         txtsl = self.get_notes_info(maintxt, sumtxt, headtxt, genekeys, adkeys)
         pickle.dump(txtsl, open(self.fileopenned, "wb"))  # sauvegarde le document
 
-    def save_on_disk_docx(self, maintxt, sumtxt, headtxt, genekeys, adkeys):
+    def save_on_disk_docx(self, maintxt, sumtxt, headtxt):
         """
         Cette fonction exporter les notes en format docx sur la machine locale
         """
@@ -154,6 +159,19 @@ class Notes:
         open('temphtml.txt','w').write(txtsl)
         transformer = HtmlToDocx()
         transformer.parse_html_file('temphtml.txt', self.title)
+        os.remove('temphtml.txt')
+        file = QFileDialog.getExistingDirectory()
+
+        if file != '':
+            try:
+                shutil.move(self.title+'.docx', file)
+            except shutil.Error:
+                os.remove(file+'/'+self.title+'.docx')
+                shutil.move(self.title + '.docx', file)
+
+        else:
+            os.remove(self.title+'.docx')
+
 
     def save_on_cloud(self, account, maintxt, sumtxt, headtxt, genekeys, adkeys):
         """
@@ -176,8 +194,10 @@ class Notes:
         filetoopen = easygui.fileopenbox()
         if filetoopen is None:
             return None
+        try:
+            txtsl = pickle.load(open(filetoopen, "rb"))
 
-        txtsl = pickle.load(open(filetoopen, "rb"))
-        notes = Notes(account=account, notes_info=txtsl, file=filetoopen)
+        except _pickle.UnpicklingError:
+            txtsl = None
 
-        return notes
+        return Notes(account=account, notes_info=txtsl, file=filetoopen)

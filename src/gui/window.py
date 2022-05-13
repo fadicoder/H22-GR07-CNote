@@ -147,9 +147,7 @@ class MainWindow(QMainWindow):
         sumtext = self.summery_text.toHtml()
         headtext = self.headLines_text.toHtml()
         maintext = self.notes_text.toHtml()
-        genekeys = self.generated_keys
-        adkeys = self.added_keys
-        self.notes.save_on_disk_docx(maintext, sumtext, headtext, genekeys, adkeys)
+        self.notes.save_on_disk_docx(maintext, sumtext, headtext)
 
     def init_toolbar(self):
         """
