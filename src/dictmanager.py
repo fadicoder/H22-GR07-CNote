@@ -96,6 +96,12 @@ def get_ideas(text, max_fonts: list, ideas: list, from_to: tuple):
 
 
 def delete_old_ideas(ideas: list, from_to: tuple, text: str):
+    """
+    Cette fonction supprime les anciennes idées sitées entre le limites données en paramètre.
+    :param ideas : objet liste contenant les idées
+    :param from_to : limites des lignes
+    :param text : le text
+    """
     if from_to is None:
         ideas.clear()
         return

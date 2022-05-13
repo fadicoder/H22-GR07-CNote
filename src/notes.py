@@ -14,15 +14,26 @@ class Notes:
     """
     def __init__(self, identification=None, account=None, notes_info=None, title=None, file=None):
 
+        """
+        Le constructeur crÃ© un objet note Ã  partir du string des informations donnÃ© en paramÃ¨tre.
+        Si ce string n'est pas donnÃ©, les notes sont nouvelles. Un identifiant alÃ©atoire sera attribuÃ© aux notes.
+
+        :param identification: id qui permet de distinguer les notes
+        :param account: compte associÃ© aux notes
+        :param notes_info: string des informations
+        :param title: titre
+        :param file: fichier de la note
+        """
+
         self.fileopenned = file  # ceci est le fichier de la note
-        self.id = identification  # note le compte associé à la note
+        self.id = identification  # note le compte associï¿½ ï¿½ la note
         self.added_keys = list()
         self.generated_keys = list()
 
         if identification is None:  # associe un compte si ce n'est pas fait
             self.id = account.generate_id()
 
-        if notes_info is None:  # initialise les zones de texte si ce n'est pas déjà fait
+        if notes_info is None:  # initialise les zones de texte si ce n'est pas dï¿½jï¿½ fait
             self.summery_html = ""
             self.headLines_html = ""
             self.notes_html = ""
@@ -33,7 +44,7 @@ class Notes:
             self.headLines_html = attributes_list[2]
             self.notes_html = attributes_list[0]
 
-            restorelistgene = attributes_list[3].split("@$?&") # cette section est pour les listes de mots générées
+            restorelistgene = attributes_list[3].split("@$?&") # cette section est pour les listes de mots gï¿½nï¿½rï¿½es
             for restoregene in restorelistgene:
                 idea = restoregene.split("@&&%*****")
                 if len(idea) <= 1:
@@ -44,7 +55,7 @@ class Notes:
 
                 self.generated_keys.append(Idea(idea[0], int(idea[1]), font, keywords))
 
-            restorelistad = attributes_list[4].split("@$?&")# cette section est pour les listes de mots ajoutées
+            restorelistad = attributes_list[4].split("@$?&")# cette section est pour les listes de mots ajoutÃ©es
 
             for restoread in restorelistad:
                 idea = restoread.split("@&&%*****")
@@ -56,40 +67,42 @@ class Notes:
                 self.added_keys.append(Idea(idea[0], int(idea[1]), font, keywords))
 
 
-        if title is None:  # créée un titre si il n'y en a pas, sinon le charge
+        if title is None:  # crÃ© un titre si il n'y en a pas, sinon le charge
             self.title = Notes.extract_title(self.headLines_html)
         else:
             self.title = title
 
+
     @staticmethod
     def extract_title(html):
         """
-        Ceci va chercher le titre dans la première ligne de texte
+        Cette fonction retire le titre Ã  partir du html du bloc des titres.
         :param html : html du bloc des titres
         """
+
         headlines = bs4.BeautifulSoup(html, features='html.parser').get_text().split('\n')
 
         if len(headlines) >= 3:
 
             if headlines[2].strip() == '':
-                title = 'Sans titre'  # écrit ca si il n'y a rien sur la premiere ligne
+                title = 'Sans titre'  # ï¿½crit ca si il n'y a rien sur la premiere ligne
             else:
                 title = headlines[2]
 
         else:
-            title = 'Sans titre'  # écrit ca si il y a moins de 3 lignes
+            title = 'Sans titre'  # ï¿½crit ca si il y a moins de 3 lignes
 
         return title
 
     @staticmethod
     def get_notes_info(maintxt, sumtxt, headtxt, genekeys, adkeys):
         """
-        Cette fonction retourne tout ce qui a été rentré/modifié dans la note par l'utilisateur en une string
+        Cette fonction retourne tout ce qui a Ã©tÃ© rentrÃ© modifiÃ© dans la note par l'utilisateur en une string
         :param maintxt : texte principal
-        :param sumtxt : texte de résumé
+        :param sumtxt : texte de rÃ©sumÃ©
         :param headtxt : texte de tete/informations importantes
-        :param genekeys : liste des mots générée
-        :param adkeys : liste des mots ajoutée par l'utilisateur
+        :param genekeys : liste des mots gÃ©nÃ©rÃ©s
+        :param adkeys : liste des mots ajoutÃ©e par l'utilisateur
         """
         strgensv = ''
 
@@ -131,23 +144,12 @@ class Notes:
         txtsl = self.get_notes_info(maintxt, sumtxt, headtxt, genekeys, adkeys)
         pickle.dump(txtsl, open(self.fileopenned, "wb"))  # sauvegarde le document
 
-        '''        openededbeforetemp = None
-        fileoptemp = None
-        if saveas == 1:
-            openededbeforetemp = self.openedfilebefore
-            fileoptemp = self.fileopenned
-
-        if saveas == 1:
-            self.openedfilebefore = openededbeforetemp
-            self.fileopenned = fileoptemp
-        '''
-
     def save_on_disk_docx(self, maintxt, sumtxt, headtxt, genekeys, adkeys):
         """
         Cette fonction exporter les notes en format docx sur la machine locale
         """
         txtsl = self.get_notes_info(headtxt,  maintxt, sumtxt, genekeys, adkeys)
-        txtsl = txtsl.replace("@&%*"," ")
+        txtsl = txtsl.replace("@&%*", " ")
         open('temphtml.txt','w').write(txtsl)
         transformer = HtmlToDocx()
         transformer.parse_html_file('temphtml.txt', self.title)
@@ -155,9 +157,6 @@ class Notes:
     def save_on_cloud(self, account, maintxt, sumtxt, headtxt, genekeys, adkeys):
         """
         Cette fonction va sauvegarder la note dans le serveur
-        :param: account :
-        :param: account :
-        :param: account :
         """
         notes_info = self.get_notes_info(maintxt, sumtxt, headtxt, genekeys, adkeys)
         self.notes_html = maintxt
@@ -171,7 +170,7 @@ class Notes:
     def notesload(account):
         """
         Cette fonction charge les notes
-        :param: account : est le compte à laquelle les notes sont associées
+        :param: account : est le compte auquel les notes sont associÃ©s
         """
         filetoopen = easygui.fileopenbox()
         if filetoopen is None:

@@ -11,20 +11,18 @@ from PyQt6.QtWidgets import *
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import *
 
-'''
-- test laod and save as
-- veuillez entrer nom utilisateur ou mot de passe
-'''
-
 
 class MainWindow(QMainWindow):
     """
-    Cette classe est la fenetre principale du programme
+    Cette classe est la fenêtre principale du programme
     """
 
     DEFAULT_FONT = QFont('Calibri', 15)
 
-    def __init__(self): # ceci est l'initialisation de la fenetre principale et les réglages par défault
+    def __init__(self):
+        """
+        Initialisation de la fenêtre principale et les réglages par défault
+        """
 
         self.highlighter = None
         self.summery_text = None
@@ -84,7 +82,7 @@ class MainWindow(QMainWindow):
 
         save_as_act = QAction('Sauvegarder sous', self)
         save_as_act.setShortcut('Ctrl+Shift+S')
-        save_as_act.triggered.connect(lambda:self.save(1))
+        save_as_act.triggered.connect(lambda: self.save(1))
 
         save_on_cloud_act = QAction('Sauvegarder dans le compte', self)
         save_on_cloud_act.triggered.connect(lambda: self.save_on_cloud(True))
@@ -154,7 +152,7 @@ class MainWindow(QMainWindow):
         adkeys = self.added_keys
         self.notes.save_on_disk_docx(maintext, sumtext, headtext, genekeys, adkeys)
 
-    def __init_toolbar(self):
+    def init_toolbar(self):
         """
         Cette fonction initiallise la barre de paramètre et son contenu, les raccourcis, leurs valeurs, etc.
         """
@@ -276,7 +274,7 @@ class MainWindow(QMainWindow):
         self.error_label.setFont(self.DEFAULT_FONT)
         self.error_label.setStyleSheet('color: red')
 
-    def __notes_page(self):
+    def notes_page(self):
         """
         Cette fonction est la fenetre qui liste toutes les notes ouvertes,
         et qui permet de facilement passer de l'une à l'autre
@@ -660,11 +658,19 @@ class MainWindow(QMainWindow):
         self.highlighter.clear_all_selections(False)
 
     def set_visible_editing_tools(self, visible):
+        """
+        Modifie l'état de visibilité des utils des textes
+        :param visible : boolean qui indique la visibilité des utils des textes
+        """
         self.toolbar.setVisible(visible)
         self.keywords_menu.setEnabled(visible)
         self.file_menu.setEnabled(visible)
 
     def password_line_key_event(self, event):
+        """
+        Évènement de presse de bouton de l'entrée de texte du mot de passe. Si on entre ENTRER, l'utilisateur se connecte
+        :param event: l'évènement
+        """
 
         if event.key() == Qt.Key.Key_Return:
             self.log_in()
@@ -673,6 +679,11 @@ class MainWindow(QMainWindow):
         QLineEdit.keyPressEvent(self.password_input, event)
 
     def username_line_key_event(self, event):
+        """
+        Évènement de presse de bouttons pour l'entrée du mot d'utilisateur. Si on entre ENTRER, le focus passe à l'entrée
+        du mot de passe.
+        :param event : évènement
+        """
         if event.key() == Qt.Key.Key_Return:
             self.username_input.clearFocus()
             self.password_input.setFocus()
@@ -681,7 +692,9 @@ class MainWindow(QMainWindow):
         QLineEdit.keyPressEvent(self.username_input, event)
 
     def fill_notes_combo(self):
-
+        """
+        Cette méthode remplit la liste des titres des notes dans la tab principale
+        """
         self.notes_combo.clear()
         for notes in self.account.notes_lst:
             self.notes_combo.addItem(notes.title, notes)
@@ -800,10 +813,6 @@ class MainWindow(QMainWindow):
             self.keywords_text.insertPlainText(' ')
             self.keywords_text.insertPlainText('\n')
 
-    def adjust_keys_with_notes(self):
-        co.adjust_idea_fonts(self.notes_text, self.all_keys)
-        self.write_keys()
-
     def update_cursor_infos(self, text, event):
         """
         Cette fonction est appelée à chaque fois que le curseur change de position. Elle initialise le QFont affiché
@@ -828,6 +837,12 @@ class MainWindow(QMainWindow):
             self.highlighter.clear_all_selections(False)
 
     def select_color(self, for_highlight):
+        """
+        Cette fonction saisit à l'utilisateur la couleur désirée pour le surlignage ou le texte.
+        Cette fonction affiche aussi la couleur choisie dans l'icône de la couleur de surlignage ou de la couleur de
+        texte.
+        :param for_highlight : boolean qui indique si on veut la couleur de surlignage
+        """
         if for_highlight:
             self.highlight_color = QColorDialog.getColor(self.highlight_color)
             pixmap = QPixmap(100, 100)
@@ -840,6 +855,11 @@ class MainWindow(QMainWindow):
             self.text_color_picker_act.setIcon(QIcon(pixmap))
 
     def color(self, for_highlight):
+        """
+        Cette fonction color le texte ou surligne le texte du dernier du bloc de texte actuellement en état de
+        modification.
+        :param for_highlight: Boolean qui indique si c'est un surlignage qui est exigé.
+        """
         if for_highlight:
             self.last_text.setTextBackgroundColor(self.highlight_color)
         else:
@@ -850,14 +870,25 @@ class MainWindow(QMainWindow):
         self.last_text.setTextCursor(cursor)
 
     def move_notes_bar(self):
+        """
+        Cette fonction déplace la bare du bloc des notes selon la position de la barre du bloc des mots-clés.
+        """
         pos = self.keywords_text.verticalScrollBar().sliderPosition()
         self.notes_text.verticalScrollBar().setSliderPosition(pos)
 
     def move_keys_bar(self):
+        """
+        Cette fonction déplace la bare du bloc des mots-clés selon la position de la barre du bloc des notes.
+        """
         pos = self.notes_text.verticalScrollBar().sliderPosition()
         self.keywords_text.verticalScrollBar().setSliderPosition(pos)
 
     def keywords_text_mouse_clic_event(self, event: QMouseEvent):
+        """
+        Cette fonction est l'évènement de clique de souris pour le bloc des mots-clés.
+        Elle permet le surlignage du mot cliqué
+        :param event : évènement
+        """
 
         QTextEdit.mousePressEvent(self.keywords_text, event)
         if len(self.all_keys) == 0:
@@ -865,7 +896,11 @@ class MainWindow(QMainWindow):
         self.highlighter.highlight(event.pos(), self.all_keys)
 
     def keywords_text_mouse_move_event(self, event: QMouseEvent):
-
+        """
+        Cette fonction est l'évènement de déplacement de souris pour le bloc des mots-clés.
+        Elle changer la forme du curseur quand il s'envole sur un mot.
+        :param event : évènement
+        """
         QTextEdit.mouseMoveEvent(self.keywords_text, event)
 
         cursor = self.keywords_text.cursorForPosition(event.pos())
@@ -879,7 +914,12 @@ class MainWindow(QMainWindow):
         self.keywords_text.viewport().unsetCursor()
 
     def keywords_text_press_event(self, event: QKeyEvent):
-
+        """
+        Cette fonction est l'évènement de presse de bouton pour le bloc des mots-clés.
+        Elle permet de déplacer le surlignage des idées avec les boutons des flèches.
+        Elle permet aussi de copier et coller les idées.
+        :param event : évènement
+        """
         key = event.key()
 
         arrow_key_pressed = self.highlighter.highlight_with_key(key, self.all_keys)
@@ -933,12 +973,17 @@ class MainWindow(QMainWindow):
         self.notes.title = title
 
     def keywords_text_focus_out_event(self, event: QFocusEvent):
+        """
+        Cette fonction permet l'effecenemnt de sélection des mots-clés une fois le focus n'est plus sur le bloc des
+        mots-clés.
+        :param event: évènement
+        """
         QTextEdit.focusOutEvent(self.keywords_text, event)
         self.highlighter.clear_all_selections(False)
 
     def add_key_line_press_event(self, event: QKeyEvent):
         """
-        Cette fonction va gérer la création d'une nouvelle idée, et les vérifications nécessaires
+        Cette fonction va gérer la création d'une nouvelle idée, en remplaçant les espace par un _
         """
         if event.key() == Qt.Key.Key_Space:  # remplacer le caractère espace par '_'
             self.keyword_line.insert('_')
