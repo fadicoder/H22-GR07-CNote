@@ -46,8 +46,7 @@ class MainWindow(QMainWindow):
         #  Indiquer au système d'exploitation que notre programme n'est pas python
         app_id = u'cnotes.1.0'
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
-
-        self.setWindowIcon(QIcon('resources/appIcon.jpg'))  # assigner une icon au programme
+        self.setWindowIcon(QIcon('../resources/appIcon.jpg'))  # assigner une icon au programme
 
         self.notes_page = self.init_notes_page()
         self.welcome_widget = self.welcome_page()
@@ -172,16 +171,16 @@ class MainWindow(QMainWindow):
         self.font_combo.setEditable(False)
         self.font_combo.currentFontChanged.connect(lambda font: self.last_text.setFontFamily(font.family()))
 
-        align_left_act = QAction(QIcon('resources/AlignLeft.png'), 'Aligner gauche', self)
-        align_center_act = QAction(QIcon('resources/AlignCenter.png'), 'Aligner centre', self)
-        align_right_act = QAction(QIcon('resources/AlignRight.png'), 'Aligner droite', self)
+        align_left_act = QAction(QIcon('../resources/AlignLeft.png'), 'Aligner gauche', self)
+        align_center_act = QAction(QIcon('../resources/AlignCenter.png'), 'Aligner centre', self)
+        align_right_act = QAction(QIcon('../resources/AlignRight.png'), 'Aligner droite', self)
         align_left_act.triggered.connect(lambda: self.last_text.setAlignment(Qt.AlignmentFlag.AlignLeft))
         align_center_act.triggered.connect(lambda: self.last_text.setAlignment(Qt.AlignmentFlag.AlignCenter))
         align_right_act.triggered.connect(lambda: self.last_text.setAlignment(Qt.AlignmentFlag.AlignRight))
 
-        self.bold_act = QAction(QIcon('resources/Bold.png'), 'Texte gras', self)
-        self.italic_act = QAction(QIcon('resources/Italic.png'), 'Texte italique', self)
-        self.underline_act = QAction(QIcon('resources/Underline.png'), 'Texte souligné', self)
+        self.bold_act = QAction(QIcon('../resources/Bold.png'), 'Texte gras', self)
+        self.italic_act = QAction(QIcon('../resources/Italic.png'), 'Texte italique', self)
+        self.underline_act = QAction(QIcon('../resources/Underline.png'), 'Texte souligné', self)
         self.bold_act.setCheckable(True)
         self.italic_act.setCheckable(True)
         self.underline_act.setCheckable(True)
@@ -200,9 +199,9 @@ class MainWindow(QMainWindow):
         highlight_pixmap.fill(self.highlight_color)
         text_color_pixmap = QPixmap(100, 100)
         text_color_pixmap.fill(self.text_color)
-        self.highlight_act = QAction(QIcon('resources/Highlight.png'), 'Surligner', self)
+        self.highlight_act = QAction(QIcon('../resources/Highlight.png'), 'Surligner', self)
         self.highlight_color_picker_act = QAction(QIcon(highlight_pixmap), 'Couleur de surlignage', self)
-        self.text_color_act = QAction(QIcon('resources/TextColor.png'), 'Colorer le texte', self)
+        self.text_color_act = QAction(QIcon('../resources/TextColor.png'), 'Colorer le texte', self)
         self.text_color_picker_act = QAction(QIcon(text_color_pixmap), 'Couleur de texte', self)
         self.highlight_color_picker_act.triggered.connect(lambda: self.select_color(True))
         self.text_color_picker_act.triggered.connect(lambda: self.select_color(False))
@@ -449,6 +448,8 @@ class MainWindow(QMainWindow):
             new_notes = False
 
         else:
+            if new_title == '':
+                new_title = 'Sans titre'
             self.notes = Notes(account=self.account, title=new_title)
             new_notes = True
 
@@ -521,7 +522,7 @@ class MainWindow(QMainWindow):
         submit_btn = QPushButton('Créer les notes')
 
         def submit_event():
-            self.create_note(notes_title_line.text().strip())
+            self.create_note(new_title=notes_title_line.text().strip())
             widget.close()
             return
 
